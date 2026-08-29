@@ -46,7 +46,7 @@ start:
     or eax, 0x00000001
     mov cr0, eax
 
-    ; Far jump para carregar CS
+    
     jmp CODE_SEG:init_pm
 
 
