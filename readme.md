@@ -1,10 +1,10 @@
-Kernel
+# Kernel
 
 A hobby operating system kernel built from scratch for the i386 architecture.
 
 The project focuses on low-level kernel development, hardware interaction, interrupt management, memory management and the mechanisms required to build a kernel without relying on an external bootloader.
 
-Quick Start
+ # Quick Start
 
 Build the kernel
 
@@ -13,7 +13,7 @@ cd build
 cmake ..
 make -j$(nproc)
 
-Run with QEMU
+# Run with QEMU
 
 make run
 
@@ -25,7 +25,7 @@ cd build
 cmake ..
 make -j$(nproc)
 
-Features
+# Features
 
 * Custom x86 bootloader
 * Automatic kernel sector calculation
@@ -40,7 +40,7 @@ Features
 * Freestanding kernel environment
 * QEMU development and debugging
 
-Boot Process
+# Boot Process
 
 The system currently follows this basic boot sequence:
 
@@ -70,7 +70,7 @@ The bootloader calculates the number of sectors required by kernel.bin automatic
 
 This prevents the bootloader from becoming desynchronized from the actual kernel size as the kernel grows.
 
-Kernel
+# Kernel
 
 The kernel is written primarily in C, with NASM assembly used where direct processor control is required.
 
@@ -87,7 +87,7 @@ kernel/
 
 The kernel currently initializes its low-level interrupt infrastructure before continuing with the main kernel initialization.
 
-Architecture
+# Architecture
 
 Current target:
 
@@ -98,7 +98,7 @@ Boot:         Custom bootloader
 Emulator:     QEMU
 Build system: CMake
 
-Debugging
+# Debugging
 
 QEMU can be used to capture CPU exceptions and reset information:
 
@@ -111,7 +111,7 @@ qemu-system-i386 \
 
 The generated log is useful for diagnosing exceptions, triple faults and unexpected CPU resets.
 
-Memory
+# Memory
 
 Memory management is part of the kernel’s planned low-level infrastructure.
 
@@ -145,7 +145,7 @@ Roadmap
 * [ ]	Virtual memory manager
 * [ ]	Expand kernel subsystems
 
-Requirements
+# Requirements
 
 A Linux-based environment with:
 
@@ -154,12 +154,12 @@ A Linux-based environment with:
 * CMake
 * QEMU
 
-Status
+# Status
 
 This is a hobby kernel under active development.
 
 The architecture and internal interfaces are expected to change as new kernel subsystems are implemented.
 
-License
+# License
 
 See the LICENSE file for the license used by this project.
