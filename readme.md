@@ -128,20 +128,7 @@ Language:     C / NASM
 Boot:         Custom bootloader
 Emulator:     QEMU
 Build system: CMake
-
-# Debugging
-
-* QEMU can be used to capture CPU exceptions and reset information:
-
-```⁠qemu-system-i386 \```⁠
-    ```⁠-drive format=raw,file=os-image.bin,if=floppy \
-    -d int,cpu_reset,guest_errors \
-    -D logs_completos.txt \
-    -no-reboot \
-    -no-shutdown```⁠
-
-* The generated log is useful for diagnosing exceptions, triple faults and unexpected CPU resets.
-
+⁠
 # Memory
 
 * Memory management is part of the kernel’s planned low-level infrastructure.
