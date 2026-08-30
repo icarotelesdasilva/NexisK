@@ -6,8 +6,7 @@
  */
 
 
- #include "stdint.h"
-
+#include "stdint.h"
 #include "memory/pmm.h"
 #include "vmm/vmm.h"
 #include "interrupts/pic.h"
@@ -18,6 +17,7 @@ extern void serial_print_hex(uint32_t n);
 
 extern void vga_clear(void);
 extern void vga_print(char *str);
+
 
 extern void pic_remap(uint8_t offset1, uint8_t offset2);
 extern void idt_install(void);
@@ -94,7 +94,6 @@ void kmain(void)
 
 
     vga_print("Kernel alive.");
-
 
     for (;;)
         asm volatile ("sti");
