@@ -6,13 +6,11 @@
  * SPDX-License-Identifier: GPL-2.0-only
  
  */
-
-		#include "idt.h"
 		extern void isr0(void);
 		extern void irq0_isr(void);
-		
+		extern void keyboard_isr(void);
 		extern void isr_double_fault(void);
-
+		#include "idt.h"
 		#include <stdint.h> 
 
 		struct idt_entry idt[256];
@@ -41,6 +39,6 @@
 		idt_set_gate(0, (uintptr_t)isr0, 0x08, 0x8E);
 		idt_set_gate(8, (uintptr_t)isr_double_fault, 0x08, 0x8E);
 		idt_set_gate(0x20, (uintptr_t)irq0_isr, 0x08, 0x8E);
-		    
+		idt_set_gate(33, (uintptr_t)keyboard_isr, 0x08, 0x8E);
 		    idt_load();
 		}

@@ -8,6 +8,7 @@
  
  */
 
+extern void serial_print(const char *str);
 extern void vga_clear(void);
 extern void vga_print(char *str);
 #include "interrupts/io.h"
@@ -22,12 +23,14 @@ extern void idt_install(void);
 void kmain(void)
 {
 
-    pic_remap(0x20, 0x28); 
-    idt_install();
-    init_pit(1000);
-   vga_clear();
-   vga_print("Kernel alive.");
+pic_remap(0x20, 0x28); 
+idt_install();
+init_pit(1000);
+vga_clear();
+serial_print("kernel alive.");
+vga_print("Kernel alive.");
 
-    for (;;)
-        asm volatile ("hlt");
+
+for (;;)
+asm volatile ("sti");
 }
