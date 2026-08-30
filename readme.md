@@ -1,39 +1,31 @@
 #    NexisK
 
-A hobby operating system kernel built from scratch for the i386 architecture.
+* A hobby operating system kernel built from scratch for the i386 architecture.
 
-The project focuses on low-level kernel development, hardware interaction, interrupt management, memory management and the mechanisms required to build a kernel without relying on an external bootloader.
+* The project focuses on low-level kernel development, hardware interaction, interrupt management, memory management and the mechanisms required to build a kernel without relying on an external bootloader.
 
  # Quick Start
 
-Build the kernel
+* Build the kernel
 
-mkdir build
+```⁠ mkdir build```⁠
 
 
-cd build
+```⁠cd build```⁠
 
-cmake ..
+```⁠cmake ..```⁠
 
-make -j$(nproc)
+```⁠make -j$(nproc)```⁠
 
 
 # Run with QEMU
 
-make run
+```⁠make run```⁠
 
-Generate a clean build
+# Generate a clean build:
 
+```⁠rm -rf build```⁠
 
-rm -rf build
-
-mkdir build
-
-cd build
-
-cmake ..
-
-make -j$(nproc)
 
 # Features
 
@@ -52,7 +44,7 @@ make -j$(nproc)
 
 # Boot Process
 
-The system currently follows this basic boot sequence:
+* The system currently follows this basic boot sequence:
 
 
 BIOS
@@ -97,15 +89,15 @@ kmain
 Kernel initialization
 
 
-The bootloader calculates the number of sectors required by kernel.bin automatically during the build process.
+* The bootloader calculates the number of sectors required by kernel.bin automatically during the build process.
 
-This prevents the bootloader from becoming desynchronized from the actual kernel size as the kernel grows.
+* This prevents the bootloader from becoming desynchronized from the actual kernel size as the kernel grows.
 
 # Kernel
 
-The kernel is written primarily in C, with NASM assembly used where direct processor control is required.
+* The kernel is written primarily in C, with NASM assembly used where direct processor control is required.
 
-Current kernel components include:
+* Current kernel components include:
 
 
 kernel/
@@ -124,11 +116,11 @@ kernel/
 
 └── kmain.c
 
-The kernel currently initializes its low-level interrupt infrastructure before continuing with the main kernel initialization.
+* The kernel currently initializes its low-level interrupt infrastructure before continuing with the main kernel initialization.
 
 # Architecture
 
-Current target:
+* Current target:
 
 Architecture: i386
 Mode:         Protected Mode
@@ -139,22 +131,22 @@ Build system: CMake
 
 # Debugging
 
-QEMU can be used to capture CPU exceptions and reset information:
+* QEMU can be used to capture CPU exceptions and reset information:
 
-qemu-system-i386 \
-    -drive format=raw,file=os-image.bin,if=floppy \
+```⁠qemu-system-i386 \```⁠
+    ```⁠-drive format=raw,file=os-image.bin,if=floppy \
     -d int,cpu_reset,guest_errors \
     -D logs_completos.txt \
     -no-reboot \
-    -no-shutdown
+    -no-shutdown```⁠
 
-The generated log is useful for diagnosing exceptions, triple faults and unexpected CPU resets.
+* The generated log is useful for diagnosing exceptions, triple faults and unexpected CPU resets.
 
 # Memory
 
-Memory management is part of the kernel’s planned low-level infrastructure.
+* Memory management is part of the kernel’s planned low-level infrastructure.
 
-Planned work includes:
+* Planned work includes:
 
 * A20 handling
 * BIOS memory map
@@ -164,7 +156,7 @@ Planned work includes:
 * Kernel memory layout
 * Proper BSS initialization
 
-Roadmap
+# Roadmap
 
 * [x]	Custom bootloader
 * [x]	Kernel loading
@@ -186,7 +178,7 @@ Roadmap
 
 # Requirements
 
-A Linux-based environment with:
+* A Linux-based environment with:
 
 * GCC
 * NASM
@@ -195,10 +187,10 @@ A Linux-based environment with:
 
 # Status
 
-This is a hobby kernel under active development.
+* This is a hobby kernel under active development.
 
-The architecture and internal interfaces are expected to change as new kernel subsystems are implemented.
+* The architecture and internal interfaces are expected to change as new kernel subsystems are implemented.
 
 # License
 
-See the LICENSE file for the license used by this project.
+* See the LICENSE file for the license used by this project.
