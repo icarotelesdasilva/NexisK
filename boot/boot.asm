@@ -6,20 +6,18 @@
 [BITS 16]
 [ORG 0x7C00]
 
-
 KERNEL_SEG          equ 0x1000
 KERNEL_OFFSET       equ 0x0000
 
 MEMORY_MAP          equ 0x5000
 MEMORY_MAP_COUNT    equ 0x4FF0
-MEMORY_MAP_MAX      equ 32
+MEMORY_MAP_MAX      equ 64
+MEMORY_MAP_ENTRY    equ 24
 
 CODE_SEG            equ 0x08
 DATA_SEG            equ 0x10
 
 %include "kernel_sectors.inc"
-
-
 
 start:
     cli
@@ -32,10 +30,8 @@ start:
 
     mov [boot_drive], dl
 
-
     call get_memory_map
     jc memory_map_error
-
 
     mov ax, KERNEL_SEG
     mov es, ax
@@ -49,15 +45,12 @@ start:
     mov dl, [boot_drive]
 
     int 0x13
-
     jc disk_error
 
-
-
     cli
+
     lgdt [gdt_descriptor]
 
-    
     mov eax, cr0
     or eax, 0x00000001
     mov cr0, eax
@@ -81,9 +74,21 @@ get_memory_map:
     cmp ax, MEMORY_MAP_MAX
     jae .done
 
+  
+    push di
+
+    xor ax, ax
+    mov cx, MEMORY_MAP_ENTRY
+.clear_entry:
+    mov [es:di], ax
+    add di, 2
+    loop .clear_entry
+
+    pop di
+
     mov eax, 0x0000E820
     mov edx, 0x534D4150
-    mov ecx, 24
+    mov ecx, MEMORY_MAP_ENTRY
 
     push di
 
@@ -99,15 +104,16 @@ get_memory_map:
     cmp ecx, 20
     jb .error
 
+  
+    mov si, cx
+
     inc word [MEMORY_MAP_COUNT]
 
-    add di, 24
+   
+    add di, MEMORY_MAP_ENTRY
 
     test ebx, ebx
-    jz .done
-
-    jmp .next_entry
-
+    jnz .next_entry
 
 .done:
     cmp word [MEMORY_MAP_COUNT], 0
@@ -115,7 +121,6 @@ get_memory_map:
 
     clc
     ret
-
 
 .error:
     stc
@@ -136,7 +141,6 @@ init_pm:
     mov esp, 0x00090000
 
     jmp 0x00010000
-
 
 
 [BITS 16]
@@ -165,7 +169,6 @@ memory_map_error:
     jmp .halt
 
 
-
 disk_error:
     xor ax, ax
     mov ds, ax
@@ -190,7 +193,6 @@ disk_error:
     jmp .halt
 
 
-
 boot_drive:
     db 0
 
@@ -199,7 +201,6 @@ disk_error_msg:
 
 memory_map_error_msg:
     db "E820 ERROR", 0
-
 
 
 align 4
@@ -227,14 +228,10 @@ gdt_data:
 
 gdt_end:
 
-
 gdt_descriptor:
     dw gdt_end - gdt_start - 1
     dd gdt_start
 
-
-
 times 510 - ($ - $$) db 0
 
 dw 0xAA55
-

@@ -1,5 +1,3 @@
-#include "stdint.h"
-
 /*
  * Nexis Kernel
  * Copyright (C) 2026 Ícaro Teles da Silva Ribeiro
@@ -7,19 +5,19 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
+#include "stdint.h"
+#include "memory/pmm.h"
+#include "interrupts/pic.h"
+
 extern void serial_print(const char *str);
+extern void serial_print_hex(uint32_t n);
+
 extern void vga_clear(void);
 extern void vga_print(char *str);
 
-#include "interrupts/io.h"
-#include "interrupts/pic.h"
-
 extern void pic_remap(uint8_t offset1, uint8_t offset2);
-extern void kernel_panic(char *str);
-extern void serial_print_hex(uint32_t n);
-void init_pit(uint32_t frequency);
 extern void idt_install(void);
-
+extern void init_pit(uint32_t frequency);
 
 void kmain(void)
 {
@@ -27,11 +25,33 @@ void kmain(void)
 
     pic_remap(0x20, 0x28);
     idt_install();
-    init_pit(1000);
 
     vga_clear();
 
     serial_print("kernel alive.\n");
+
+    pmm_init();
+
+    uint32_t page1 = pmm_alloc_page();
+    uint32_t page2 = pmm_alloc_page();
+
+    serial_print("Page 1: ");
+    serial_print_hex(page1);
+    serial_print("\n");
+
+    serial_print("Page 2: ");
+    serial_print_hex(page2);
+    serial_print("\n");
+
+    pmm_free_page(page1);
+
+    uint32_t page3 = pmm_alloc_page();
+
+    serial_print("Page 3: ");
+    serial_print_hex(page3);
+    serial_print("\n");
+
+    init_pit(1000);
 
     serial_print("E820 entries: ");
     serial_print_hex(count);
