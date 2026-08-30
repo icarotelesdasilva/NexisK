@@ -6,10 +6,9 @@
 
  # Quick Start
 
-* Build the kernel
+* Build the kernel:
 
 ```⁠ mkdir build```⁠
-
 
 ```⁠cd build```⁠
 
