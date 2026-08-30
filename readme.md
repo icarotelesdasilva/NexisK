@@ -9,9 +9,14 @@ The project focuses on low-level kernel development, hardware interaction, inter
 Build the kernel
 
 mkdir build
+
+
 cd build
+
 cmake ..
+
 make -j$(nproc)
+
 
 # Run with QEMU
 
@@ -19,10 +24,15 @@ make run
 
 Generate a clean build
 
+
 rm -rf build
+
 mkdir build
+
 cd build
+
 cmake ..
+
 make -j$(nproc)
 
 # Features
