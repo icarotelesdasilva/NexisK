@@ -91,9 +91,7 @@ void pmm_init(void)
         }
     }
 
-    /*
-     * Reservar kernel.
-     */
+    
     kernel_first_page =
         0x00010000U / PAGE_SIZE;
 
