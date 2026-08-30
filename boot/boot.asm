@@ -7,9 +7,10 @@ KERNEL_OFFSET   equ 0x0000
 CODE_SEG        equ 0x08
 DATA_SEG        equ 0x10
 
-KERNEL_SECTORS  equ 1
+%include "kernel_sectors.inc"
 
 start:
+
     cli
 
     xor ax, ax
