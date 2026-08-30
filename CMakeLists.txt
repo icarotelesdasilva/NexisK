@@ -1,4 +1,9 @@
 
+ # Nexis Kernel
+ # Copyright (C) 2026 Ícaro Teles da Silva Ribeiro
+ # Author: @icarotelesdasilva
+ # SPDX-License-Identifier: GPL-2.0-only
+ 
 cmake_minimum_required(VERSION 3.10)
 
 project(kernel LANGUAGES C ASM_NASM)

@@ -1,4 +1,10 @@
 
+
+ ; Nexis Kernel
+ ; Copyright (C) 2026 Ícaro Teles da Silva Ribeiro
+ ; Author: @icarotelesdasilva
+ ; SPDX-License-Identifier: GPL-2.0-only
+ 
 section .rodata
     double_fault_str db "KERNEL PANIC: Double Fault (0x08)", 0
 

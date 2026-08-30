@@ -1,3 +1,12 @@
+/*
+ 
+ * Nexis Kernel
+ * Copyright (C) 2026 Ícaro Teles da Silva Ribeiro
+ * Author: @icarotelesdasilva
+ * SPDX-License-Identifier: GPL-2.0-only
+ 
+ */
+
 #ifndef PIC_H
 #define PIC_H
 #define master_pic_command 0x20

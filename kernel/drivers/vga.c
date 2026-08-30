@@ -1,6 +1,10 @@
 /*
- * Kernel-Ícaro (vmicaro)
- * Copyright (c) 2026 Ícaro Teles da Silva (@icarotelesdasilva)
+ 
+ * Nexis Kernel
+ * Copyright (C) 2026 Ícaro Teles da Silva Ribeiro
+ * Author: @icarotelesdasilva
+ * SPDX-License-Identifier: GPL-2.0-only
+ 
  */
 
 char *vga  = (char*)0xB8000;
