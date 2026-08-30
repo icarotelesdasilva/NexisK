@@ -35,7 +35,8 @@ make -j$(nproc)⁠
 - VGA text output
 - C and NASM kernel components
 - Freestanding kernel environment
-
+- serial added
+- interrupts on
 
 ## Boot Process
 
