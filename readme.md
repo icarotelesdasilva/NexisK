@@ -171,11 +171,6 @@ Build system: CMake
 * CMake
 * QEMU
 
-# Status
-
-* This is a hobby kernel under active development.
-
-* The architecture and internal interfaces are expected to change as new kernel subsystems are implemented.
 
 # License
 
