@@ -54,27 +54,48 @@ make -j$(nproc)
 
 The system currently follows this basic boot sequence:
 
+
 BIOS
+
  ↓
+
 Bootloader
+
  ↓
+
 Load kernel from disk
+
  ↓
+
 Load GDT
+
  ↓
+
 Enter protected mode
+
  ↓
+
 Initialize protected-mode segments
+
  ↓
+
 Initialize stack
+
  ↓
+
 Jump to kernel
+
  ↓
+
 _start
  ↓
+
 kmain
+
  ↓
+
 Kernel initialization
+
 
 The bootloader calculates the number of sectors required by kernel.bin automatically during the build process.
 
@@ -86,13 +107,21 @@ The kernel is written primarily in C, with NASM assembly used where direct proce
 
 Current kernel components include:
 
+
 kernel/
+
 ├── drivers/
+
 ├── handlers/
+
 ├── idt/
+
 ├── interrupts/
+
 ├── timer/
+
 ├── kernel.asm
+
 └── kmain.c
 
 The kernel currently initializes its low-level interrupt infrastructure before continuing with the main kernel initialization.
