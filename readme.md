@@ -1,4 +1,4 @@
-# Kernel
+#    NexisK
 
 A hobby operating system kernel built from scratch for the i386 architecture.
 
