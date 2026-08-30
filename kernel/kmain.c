@@ -29,6 +29,7 @@ extern void mouse_register_interrupt(void);
 extern void ps2_mouse_init(int screen_width, int screen_height);
 extern void unmask_mouse_irq(void);
 
+extern void ring3_test(void);
 
 void kmain(void)
 {
@@ -94,7 +95,7 @@ void kmain(void)
 
 
     vga_print("Kernel alive.");
-
+ring3_test();
     for (;;)
         asm volatile ("sti");
 }
