@@ -145,7 +145,7 @@ Memory management is currently under development.
 - [x]	PIT
 - [x]	VGA output
 - [x]	Automatic kernel sector calculation
-
+- [x] context switch
 ## Requirements
 
 - Linux
