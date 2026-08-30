@@ -21,13 +21,18 @@ typedef struct
 } registers_t;
 
 
+void syscall_1(registers_t *regs)
+{
+    serial_print("syslog: 1\n");
+    regs->eax = 0;
+}
+
 void handler_syscall(registers_t *regs)
 {
     switch (regs->eax)
     {
         case 1:
-            serial_print("syslog: 1\n");
-            regs->eax = 0;
+            syscall_1(regs);
             break;
 
         default:
