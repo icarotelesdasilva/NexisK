@@ -1,5 +1,4 @@
 Kernel
-============
 
 A hobby operating system kernel built from scratch for the i386 architecture.
 
@@ -7,20 +6,18 @@ The project focuses on low-level kernel development, hardware interaction, inter
 
 Quick Start
 
-
-
-Build the kernel:
+Build the kernel
 
 mkdir build
 cd build
 cmake ..
 make -j$(nproc)
 
-Run with QEMU:
+Run with QEMU
 
 make run
 
-Generate a clean build:
+Generate a clean build
 
 rm -rf build
 mkdir build
@@ -29,8 +26,6 @@ cmake ..
 make -j$(nproc)
 
 Features
-
-
 
 * Custom x86 bootloader
 * Automatic kernel sector calculation
@@ -46,8 +41,6 @@ Features
 * QEMU development and debugging
 
 Boot Process
-
-
 
 The system currently follows this basic boot sequence:
 
@@ -79,9 +72,7 @@ This prevents the bootloader from becoming desynchronized from the actual kernel
 
 Kernel
 
-
-
-The kernel is written primarily in C with NASM assembly used where direct processor control is required.
+The kernel is written primarily in C, with NASM assembly used where direct processor control is required.
 
 Current kernel components include:
 
@@ -98,20 +89,16 @@ The kernel currently initializes its low-level interrupt infrastructure before c
 
 Architecture
 
-
-
 Current target:
 
 Architecture: i386
-Mode: Protected Mode
-Language: C / NASM
-Boot: Custom bootloader
-Emulator: QEMU
+Mode:         Protected Mode
+Language:     C / NASM
+Boot:         Custom bootloader
+Emulator:     QEMU
 Build system: CMake
 
 Debugging
-
-
 
 QEMU can be used to capture CPU exceptions and reset information:
 
@@ -126,8 +113,6 @@ The generated log is useful for diagnosing exceptions, triple faults and unexpec
 
 Memory
 
-
-
 Memory management is part of the kernel’s planned low-level infrastructure.
 
 Planned work includes:
@@ -141,8 +126,6 @@ Planned work includes:
 * Proper BSS initialization
 
 Roadmap
-
-
 
 * [x]	Custom bootloader
 * [x]	Kernel loading
@@ -164,8 +147,6 @@ Roadmap
 
 Requirements
 
-⸻
-
 A Linux-based environment with:
 
 * GCC
@@ -174,8 +155,6 @@ A Linux-based environment with:
 * QEMU
 
 Status
-
-
 
 This is a hobby kernel under active development.
 
