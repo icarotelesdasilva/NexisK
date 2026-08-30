@@ -1,9 +1,7 @@
-
-
- ; Nexis Kernel
- ; Copyright (C) 2026 Ícaro Teles da Silva Ribeiro
- ; Author: @icarotelesdasilva
- ; SPDX-License-Identifier: GPL-2.0-only
+; Nexis Kernel
+; Copyright (C) 2026 Ícaro Teles da Silva Ribeiro
+; Author: @icarotelesdasilva
+; SPDX-License-Identifier: GPL-2.0-only
  
 section .rodata
     double_fault_str db "KERNEL PANIC: Double Fault (0x08)", 0
@@ -11,15 +9,16 @@ section .rodata
 global isr_double_fault
 global isr0
 global irq0_isr
-global current
-global next
 global keyboard_isr
+
 extern keyboard_handler
 extern handler_0x08
 extern isr_handler
 extern irq0_handler
-section .text
+extern current
+extern next
 
+section .text
 
 keyboard_isr:
     pushad
@@ -84,7 +83,3 @@ isr0:
     popa                
     add esp, 8          
     iret
-
-section .data
-    current: dd 0      
-    next:    dd 0      
