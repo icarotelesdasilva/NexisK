@@ -5,25 +5,22 @@
  * SPDX-License-Identifier: GPL-2.0-only
  */
 
+#include <stdint.h>
 
-#include "stdint.h"
 #include "memory/pmm.h"
 #include "vmm/vmm.h"
 #include "interrupts/pic.h"
-
 
 extern void serial_print(const char *str);
 extern void serial_print_hex(uint32_t n);
 
 extern void vga_clear(void);
-extern void vga_print(char *str);
-
+extern void vga_print(const char *str);
 
 extern void pic_remap(uint8_t offset1, uint8_t offset2);
 extern void idt_install(void);
 extern void init_gdt(void);
 extern void init_pit(uint32_t frequency);
-
 
 extern void mouse_register_interrupt(void);
 extern void ps2_mouse_init(int screen_width, int screen_height);
@@ -40,7 +37,6 @@ void kmain(void)
     init_gdt();
 
 
-
     pic_remap(0x20, 0x28);
 
 
@@ -48,18 +44,26 @@ void kmain(void)
     vmm_init();
 
 
+    uint32_t physical_page = pmm_alloc_page();
+
+    map_page(0x00400000, physical_page);
+
+    volatile uint32_t *virtual_page =
+        (volatile uint32_t *)0x00400000;
+
+    *virtual_page = 0x12345678;
+
+    serial_print("VMM map_page OK\n");
+
 
     idt_install();
 
 
     init_pit(1000);
 
-
-
     mouse_register_interrupt();
     ps2_mouse_init(800, 600);
     unmask_mouse_irq();
-
 
 
     vga_clear();
@@ -82,9 +86,7 @@ void kmain(void)
     serial_print_hex(page2);
     serial_print("\n");
 
-
     pmm_free_page(page1);
-
 
     uint32_t page3 = pmm_alloc_page();
 
@@ -93,9 +95,10 @@ void kmain(void)
     serial_print("\n");
 
 
-
     vga_print("Kernel alive.");
-ring3_test();
+
+    ring3_test();
+
     for (;;)
-        asm volatile ("sti");
+        asm volatile ("sti; hlt");
 }
