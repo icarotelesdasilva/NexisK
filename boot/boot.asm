@@ -19,6 +19,9 @@ DATA_SEG            equ 0x10
 
 %include "kernel_sectors.inc"
 
+
+; Real Mode Entry
+
 start:
     cli
 
@@ -33,29 +36,25 @@ start:
     call get_memory_map
     jc memory_map_error
 
-    mov ax, KERNEL_SEG
-    mov es, ax
-    mov bx, KERNEL_OFFSET
-
-    mov ah, 0x02
-    mov al, KERNEL_SECTORS
-    mov ch, 0
-    mov cl, 2
-    mov dh, 0
-    mov dl, [boot_drive]
-
-    int 0x13
+    call load_kernel
     jc disk_error
 
-    cli
+    call enter_protected_mode
+
+    
+
+  enter_protected_mode:
 
     lgdt [gdt_descriptor]
 
     mov eax, cr0
+  
     or eax, 0x00000001
+  
     mov cr0, eax
 
-    jmp CODE_SEG:init_pm
+    jmp CODE_SEG:init_pm  
+
 
 
 get_memory_map:
@@ -74,12 +73,13 @@ get_memory_map:
     cmp ax, MEMORY_MAP_MAX
     jae .done
 
-  
     push di
 
     xor ax, ax
     mov cx, MEMORY_MAP_ENTRY
+
 .clear_entry:
+
     mov [es:di], ax
     add di, 2
     loop .clear_entry
@@ -104,12 +104,9 @@ get_memory_map:
     cmp ecx, 20
     jb .error
 
-  
-    mov si, cx
 
     inc word [MEMORY_MAP_COUNT]
 
-   
     add di, MEMORY_MAP_ENTRY
 
     test ebx, ebx
@@ -127,6 +124,32 @@ get_memory_map:
     ret
 
 
+
+load_kernel:
+    mov ax, KERNEL_SEG
+    mov es, ax
+    mov bx, KERNEL_OFFSET
+
+    mov ah, 0x02
+    mov al, KERNEL_SECTORS
+    mov ch, 0
+    mov cl, 2
+    mov dh, 0
+    mov dl, [boot_drive]
+
+    int 0x13
+    jc .error
+
+    clc
+    ret
+
+.error:
+    stc
+    ret
+
+
+; Protected Mode Initialization
+
 [BITS 32]
 
 init_pm:
@@ -141,6 +164,9 @@ init_pm:
     mov esp, 0x00090000
 
     jmp 0x00010000
+
+
+; Error: Memory Map
 
 
 [BITS 16]
@@ -169,6 +195,8 @@ memory_map_error:
     jmp .halt
 
 
+; Error: Disk
+
 disk_error:
     xor ax, ax
     mov ds, ax
@@ -193,6 +221,8 @@ disk_error:
     jmp .halt
 
 
+; Boot Data
+
 boot_drive:
     db 0
 
@@ -202,6 +232,9 @@ disk_error_msg:
 memory_map_error_msg:
     db "E820 ERROR", 0
 
+
+
+; Global Descriptor Table
 
 align 4
 
@@ -231,6 +264,7 @@ gdt_end:
 gdt_descriptor:
     dw gdt_end - gdt_start - 1
     dd gdt_start
+
 
 times 510 - ($ - $$) db 0
 
