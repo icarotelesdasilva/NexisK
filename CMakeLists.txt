@@ -1,12 +1,20 @@
+# Nexis Kernel
+# Copyright (C) 2026 Ícaro Teles da Silva Ribeiro
+# Author: @icarotelesdasilva
+# SPDX-License-Identifier: GPL-2.0-only
 
- # Nexis Kernel
- # Copyright (C) 2026 Ícaro Teles da Silva Ribeiro
- # Author: @icarotelesdasilva
- # SPDX-License-Identifier: GPL-2.0-only
- 
+
 cmake_minimum_required(VERSION 3.10)
 
 project(kernel LANGUAGES C ASM_NASM)
+
+
+
+find_program(GENISOIMAGE genisoimage REQUIRED)
+find_program(OBJCOPY objcopy REQUIRED)
+find_program(NASM nasm REQUIRED)
+
+
 
 set(CMAKE_ASM_NASM_COMPILE_OBJECT
     "<CMAKE_ASM_NASM_COMPILER> -f elf32 <FLAGS> -o <OBJECT> <SOURCE>"
@@ -17,19 +25,21 @@ set(CMAKE_C_FLAGS
 )
 
 
+
 file(GLOB_RECURSE KERNEL_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/kernel/*.c"
     "${CMAKE_CURRENT_SOURCE_DIR}/kernel/*.asm"
 )
 
-
 add_executable(kernel.elf ${KERNEL_SOURCES})
+
 
 set_target_properties(kernel.elf PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 )
+
 
 target_link_options(kernel.elf PRIVATE
     "-no-pie"
@@ -41,12 +51,13 @@ target_link_options(kernel.elf PRIVATE
 )
 
 
+
 add_custom_command(
     OUTPUT
         "${CMAKE_CURRENT_BINARY_DIR}/kernel.bin"
 
     COMMAND
-        objcopy
+        ${OBJCOPY}
         -O binary
         "$<TARGET_FILE:kernel.elf>"
         "${CMAKE_CURRENT_BINARY_DIR}/kernel.bin"
@@ -54,8 +65,9 @@ add_custom_command(
     DEPENDS
         kernel.elf
 
-    COMMENT "Gerando kernel.bin..."
+    COMMENT "Generating kernel.bin..."
 )
+
 
 
 add_custom_command(
@@ -72,7 +84,7 @@ add_custom_command(
         "${CMAKE_CURRENT_BINARY_DIR}/kernel.bin"
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/calculate_sectors.cmake"
 
-    COMMENT "Calculando setores do kernel..."
+    COMMENT "Calculating kernel sectors..."
 )
 
 
@@ -81,7 +93,7 @@ add_custom_command(
         "${CMAKE_CURRENT_BINARY_DIR}/boot.bin"
 
     COMMAND
-        nasm
+        ${NASM}
         -f bin
         -I "${CMAKE_CURRENT_BINARY_DIR}/"
         "${CMAKE_CURRENT_SOURCE_DIR}/boot/boot.asm"
@@ -91,8 +103,9 @@ add_custom_command(
         "${CMAKE_CURRENT_SOURCE_DIR}/boot/boot.asm"
         "${CMAKE_CURRENT_BINARY_DIR}/kernel_sectors.inc"
 
-    COMMENT "Gerando bootloader..."
+    COMMENT "Generating bootloader..."
 )
+
 
 
 add_custom_command(
@@ -100,7 +113,7 @@ add_custom_command(
         "${CMAKE_CURRENT_BINARY_DIR}/os-image.bin"
 
     COMMAND
-        cat
+        ${CMAKE_COMMAND} -E cat
         "${CMAKE_CURRENT_BINARY_DIR}/boot.bin"
         "${CMAKE_CURRENT_BINARY_DIR}/kernel.bin"
         >
@@ -115,23 +128,94 @@ add_custom_command(
         "${CMAKE_CURRENT_BINARY_DIR}/boot.bin"
         "${CMAKE_CURRENT_BINARY_DIR}/kernel.bin"
 
-    COMMENT "os-image.bin..."
+    COMMENT "Generating floppy boot image..."
 )
+
+
+
+set(ISO_ROOT
+    "${CMAKE_CURRENT_BINARY_DIR}/iso-root"
+)
+
+add_custom_command(
+    OUTPUT
+        "${ISO_ROOT}/os-image.bin"
+
+    COMMAND
+        ${CMAKE_COMMAND} -E make_directory
+        "${ISO_ROOT}"
+
+    COMMAND
+        ${CMAKE_COMMAND} -E copy
+        "${CMAKE_CURRENT_BINARY_DIR}/os-image.bin"
+        "${ISO_ROOT}/os-image.bin"
+
+    DEPENDS
+        "${CMAKE_CURRENT_BINARY_DIR}/os-image.bin"
+
+    COMMENT "Preparing ISO boot image..."
+)
+
+
+
+set(ISO_IMAGE
+    "${CMAKE_CURRENT_BINARY_DIR}/NexisK.iso"
+)
+
+add_custom_command(
+    OUTPUT
+        "${ISO_IMAGE}"
+
+    COMMAND
+        ${GENISOIMAGE}
+        -R
+        -J
+        -V NEXISK
+        -b os-image.bin
+        -c boot.catalog
+        -o "${ISO_IMAGE}"
+        "${ISO_ROOT}"
+
+    DEPENDS
+        "${ISO_ROOT}/os-image.bin"
+
+    COMMENT "Generating NexisK.iso..."
+)
+
+
 
 add_custom_target(os_image ALL
     DEPENDS
-        "${CMAKE_CURRENT_BINARY_DIR}/os-image.bin"
+        "${ISO_IMAGE}"
 )
+
+
 add_custom_target(run
+    COMMAND
+        qemu-system-i386
+        -cdrom
+        "${ISO_IMAGE}"
+        -boot d
+        -serial stdio
+
+    DEPENDS
+        os_image
+
+    COMMENT "Starting NexisK ISO..."
+)
+
+
+
+add_custom_target(run_floppy
     COMMAND
         qemu-system-i386
         -drive
         "format=raw,file=${CMAKE_CURRENT_BINARY_DIR}/os-image.bin,if=floppy"
 
     DEPENDS
-        os_image
+        "${CMAKE_CURRENT_BINARY_DIR}/os-image.bin"
 
-    COMMENT "Iniciando QEMU..."
+    COMMENT "Starting NexisK floppy image..."
 )
 
 
@@ -172,6 +256,13 @@ add_custom_target(distclean
         ${CMAKE_COMMAND} -E remove
         "${CMAKE_CURRENT_BINARY_DIR}/os-image.bin"
 
-    COMMENT "clean build..."
-)
+    COMMAND
+        ${CMAKE_COMMAND} -E remove
+        "${CMAKE_CURRENT_BINARY_DIR}/NexisK.iso"
 
+    COMMAND
+        ${CMAKE_COMMAND} -E remove_directory
+        "${CMAKE_CURRENT_BINARY_DIR}/iso-root"
+
+    COMMENT "Cleaning build..."
+)

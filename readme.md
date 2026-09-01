@@ -2,7 +2,7 @@
 
 A general-purpose kernel built from scratch for the **i386 architecture**.
 
-NexisK is an experimental operating system kernel focused on low-level development, x86 protected mode, hardware interaction, interrupt handling, memory management, privilege levels, system calls and process-related mechanisms.
+NexisK is an experimental operating system kernel focused on low-level development, x86 protected mode, hardware interaction, interrupt handling, memory management, privilege levels, system calls, virtual memory and process-related mechanisms.
 
 The project is written from scratch using **C and NASM assembly**, with a custom bootloader and no external bootloader dependency.
 
@@ -10,14 +10,17 @@ The project is written from scratch using **C and NASM assembly**, with a custom
 
 NexisK currently boots into **i386 protected mode** and provides a functional low-level kernel foundation including:
 
-* Custom bootloader
+* Custom BIOS bootloader
 * Automatic kernel sector calculation
-* Protected mode
+* Bootable ISO generation
+* El Torito BIOS boot support through floppy emulation
+* i386 protected mode
 * Global Descriptor Table (GDT)
 * Task State Segment (TSS)
 * Ring 3 support
 * Interrupt Descriptor Table (IDT)
-* Interrupt handlers
+* CPU exception handlers
+* Hardware interrupt handling
 * Programmable Interrupt Controller (PIC)
 * Programmable Interval Timer (PIT)
 * PS/2 mouse interrupt handling
@@ -26,6 +29,7 @@ NexisK currently boots into **i386 protected mode** and provides a functional lo
 * Physical Memory Manager (PMM)
 * Virtual Memory Manager (VMM)
 * Paging
+* Dynamic virtual page mapping
 * Basic context switching
 * Basic system call interface
 * Ring 3 → `int 0x80` → kernel syscall execution
@@ -41,6 +45,7 @@ The project is still under active development and should be considered experimen
 * NASM
 * CMake
 * QEMU
+* `genisoimage`
 
 ### Build
 
@@ -51,18 +56,39 @@ cmake ..
 make -j$(nproc)
 ```
 
+The build system generates:
+
+```text
+kernel.elf
+kernel.bin
+kernel_sectors.inc
+boot.bin
+os-image.bin
+NexisK.iso
+```
+
 ### Run
+
+Run the bootable ISO with:
 
 ```bash
 make run
 ```
 
-The kernel is executed using QEMU with serial output available for debugging.
+The ISO is booted through **BIOS El Torito floppy emulation**. The custom NexisK bootloader remains responsible for loading and starting the kernel.
+
+### Run the Floppy Image
+
+The raw floppy image can also be tested directly:
+
+```bash
+make run_floppy
+```
 
 ### Clean Build
 
 ```bash
-rm -rf build
+make distclean
 mkdir build
 cd build
 cmake ..
@@ -71,28 +97,82 @@ make -j$(nproc)
 
 ## Architecture
 
-| Component            | Current implementation |
-| -------------------- | ---------------------- |
-| Architecture         | i386                   |
-| CPU mode             | Protected Mode         |
-| Language             | C / NASM               |
-| Boot                 | Custom bootloader      |
-| Memory management    | PMM + initial VMM      |
-| Paging               | Enabled                |
-| Privilege levels     | Ring 0 / Ring 3        |
-| Interrupt controller | PIC                    |
-| Timer                | PIT                    |
-| Emulator             | QEMU                   |
-| Build system         | CMake                  |
-| License              | GPL-2.0-only           |
+| Component            | Current implementation           |
+| -------------------- | -------------------------------- |
+| Architecture         | i386                             |
+| CPU mode             | Protected Mode                   |
+| Language             | C / NASM                         |
+| Boot                 | Custom BIOS bootloader           |
+| Boot media           | ISO / El Torito floppy emulation |
+| Memory management    | PMM + VMM                        |
+| Paging               | Enabled                          |
+| Virtual mapping      | Basic `map_page()`               |
+| Privilege levels     | Ring 0 / Ring 3                  |
+| Interrupt controller | PIC                              |
+| Timer                | PIT                              |
+| Emulator             | QEMU                             |
+| Build system         | CMake                            |
+| License              | GPL-2.0-only                     |
 
 ## Features
 
 ### Bootloader
 
-NexisK uses a custom x86 bootloader instead of relying on GRUB or another external bootloader.
+NexisK uses a custom x86 BIOS bootloader instead of relying on GRUB, Limine or another external bootloader.
 
-The build system calculates the number of sectors required by the kernel automatically. This keeps the bootloader synchronized with the generated kernel image as the kernel grows.
+The bootloader currently:
+
+* Initializes the real-mode environment
+* Obtains the BIOS E820 memory map
+* Loads the kernel from the boot image
+* Loads the GDT
+* Enters i386 protected mode
+* Initializes the protected-mode kernel stack
+* Transfers execution to the kernel
+
+The build system calculates the number of 512-byte sectors required by the kernel automatically.
+
+The generated boot image contains:
+
+```text
+sector 0       bootloader
+sector 1..N    kernel
+remaining      padding
+```
+
+The boot image is currently packaged into a 1.44 MB floppy image and exposed to BIOS through El Torito floppy emulation when building the final ISO.
+
+The current bootloader is intentionally simple and remains based on BIOS CHS disk access. A future refactor is planned to remove the floppy/CHS assumptions and use a more general bare-metal disk-loading mechanism.
+
+### Bootable ISO
+
+The build system generates a bootable ISO:
+
+```text
+NexisK.iso
+```
+
+The ISO contains the generated 1.44 MB boot image as its El Torito BIOS boot image.
+
+The current boot chain is:
+
+```text
+BIOS
+  |
+  v
+El Torito
+  |
+  v
+Floppy-emulated boot image
+  |
+  v
+Custom NexisK bootloader
+  |
+  v
+Kernel
+```
+
+The ISO generation is handled as part of the CMake build system.
 
 ### Protected Mode
 
@@ -111,11 +191,11 @@ Current GDT support includes:
 * Task State Segment descriptor
 * Ring 3 privilege support
 
-The TSS provides the kernel stack information required when transitioning from user mode back into Ring 0.
+The TSS provides kernel stack information required during transitions from user mode back into Ring 0.
 
 ### Interrupts
 
-The kernel contains an Interrupt Descriptor Table and interrupt handlers for processor exceptions and hardware interrupts.
+The kernel contains an Interrupt Descriptor Table and handlers for processor exceptions and hardware interrupts.
 
 Current infrastructure includes:
 
@@ -137,7 +217,7 @@ int 0x80
 
 The syscall number is passed through `EAX`.
 
-The current implementation contains a basic syscall used to validate the complete Ring 3 → Ring 0 transition and return path.
+The current implementation contains a basic syscall used to validate the Ring 3 → Ring 0 transition and return path.
 
 Current execution path:
 
@@ -169,35 +249,58 @@ NexisK currently contains two layers of memory management.
 
 #### Physical Memory Manager
 
-The PMM uses the memory map provided during boot to identify available physical memory.
+The PMM uses the BIOS E820 memory map provided during boot to identify physical memory regions.
 
 Current functionality includes:
 
 * Physical page discovery
 * Bitmap-based page tracking
-* Page allocation
-* Page freeing
+* Physical page allocation
+* Physical page freeing
 * Bitmap protection
+
+Example allocation behavior:
+
+```text
+Page 1: 0x00104000
+Page 2: 0x00105000
+Page 3: 0x00104000
+```
+
+The third allocation can reuse a page previously freed by the allocator.
 
 #### Virtual Memory Manager
 
-The VMM currently provides the initial paging infrastructure.
+The VMM currently provides the paging foundation and basic dynamic page mapping.
 
-Current implementation:
+Current implementation includes:
 
 * Page directory creation
 * Page table creation
-* Identity mapping
+* Initial identity mapping
 * CR3 initialization
 * Paging activation through CR0
+* Basic virtual-to-physical page mapping
+* TLB invalidation with `invlpg`
 
-The current VMM is intentionally simple and is planned to evolve into a full virtual memory subsystem.
+The current `map_page()` implementation allows mappings such as:
 
-## Context Switching
+```text
+virtual 0x00400000
+        |
+        v
+physical page allocated by PMM
+```
 
-NexisK contains initial process/context-switching infrastructure.
+The mapping is currently created with present and writable permissions.
 
-The context-switch mechanism preserves processor execution state so execution can later continue from the saved context.
+The VMM is still being expanded toward a complete virtual memory subsystem.
+
+### Context Switching
+
+NexisK contains initial process and context-switching infrastructure.
+
+The context-switch mechanism preserves processor execution state so execution can later continue from a saved context.
 
 This subsystem is still being developed toward a complete process and scheduling architecture.
 
@@ -254,11 +357,46 @@ kernel/
 └── kmain.c
 ```
 
-The repository currently reflects this modular structure, including dedicated GDT, memory, VMM and process subsystems.
+## Build System
+
+The build pipeline is:
+
+```text
+C / NASM sources
+        |
+        v
+    kernel.elf
+        |
+        v
+    kernel.bin
+        |
+        v
+calculate_sectors.cmake
+        |
+        v
+kernel_sectors.inc
+        |
+        v
+     boot.bin
+        |
+        v
+boot.bin + kernel.bin
+        |
+        v
+   os-image.bin
+        |
+        v
+    genisoimage
+        |
+        v
+     NexisK.iso
+```
+
+The raw floppy image and ISO are generated automatically by CMake.
 
 ## Boot Process
 
-The current boot flow is approximately:
+The current boot process is approximately:
 
 ```text
 BIOS
@@ -266,20 +404,25 @@ BIOS
  v
 Custom Bootloader
  |
- v
-Load Kernel
+ +--> Initialize Real Mode
+ |
+ +--> Read E820 Memory Map
+ |
+ +--> Load Kernel
+ |
+ +--> Load GDT
+ |
+ +--> Enable Protected Mode
  |
  v
-Load / Initialize GDT
+init_pm
+ |
+ +--> Load Protected-Mode Segments
+ |
+ +--> Initialize Kernel Stack
  |
  v
-Enter Protected Mode
- |
- v
-Initialize Kernel Stack
- |
- v
-_start
+Kernel Entry
  |
  v
 kmain
@@ -287,6 +430,8 @@ kmain
  +--> GDT / TSS
  |
  +--> PIC
+ |
+ +--> PMM
  |
  +--> VMM / Paging
  |
@@ -296,7 +441,7 @@ kmain
  |
  +--> PS/2
  |
- +--> PMM
+ +--> Syscall / Ring 3
  |
  +--> Kernel initialization
 ```
@@ -305,9 +450,11 @@ kmain
 
 ### Completed
 
-* [x] Custom bootloader
+* [x] Custom BIOS bootloader
 * [x] Automatic kernel sector calculation
 * [x] Kernel loading
+* [x] Bootable ISO generation
+* [x] El Torito BIOS boot support
 * [x] i386 protected mode
 * [x] GDT
 * [x] IDT
@@ -328,20 +475,27 @@ kmain
 * [x] Basic syscall interface
 * [x] Ring 3 syscall execution
 * [x] Initial context-switching infrastructure
+* [x] Basic dynamic page mapping
 
 ### Planned
 
 * [ ] Expand virtual memory management
+* [ ] `unmap_page()`
+* [ ] Page fault handling
 * [ ] User/kernel page permission separation
-* [ ] Dynamic virtual page mapping
-* [ ] Process address spaces
+* [ ] Per-process address spaces
 * [ ] Process creation
+* [ ] PID management
 * [ ] Scheduler
-* [ ] Multitasking
+* [ ] Full multitasking
 * [ ] More system calls
 * [ ] User-space programs
 * [ ] Filesystem
 * [ ] Storage drivers
+* [ ] Replace floppy/CHS assumptions in the bootloader
+* [ ] General LBA disk loading
+* [ ] More robust kernel loading
+* [ ] UEFI boot support
 * [ ] Transition toward x86-64
 
 ## Versioning
@@ -356,24 +510,27 @@ v0.5.0  Virtual Memory / Paging / PS/2
 v0.6.0  GDT / Ring 3 / TSS
 v0.7.0  Basic Syscall Interface
 v0.7.1  Ring 3 Syscall Validation
+v0.7.3  Basic VMM Page Mapping + Boot/Build Refactoring
 ```
 
 ## Project Goals
 
-The long-term goal of NexisK is to evolve from a minimal i386 kernel into a more complete operating system kernel while keeping the implementation understandable and developed from the lowest levels upward.
+The long-term goal of NexisK is to evolve from an experimental i386 kernel into a more complete operating system kernel while keeping the implementation understandable and developed from the lowest levels upward.
 
 The project is primarily a learning and experimentation project focused on understanding:
 
 * x86 architecture
 * CPU privilege levels
 * Interrupts
-* Memory management
-* Paging
+* Physical memory management
+* Virtual memory and paging
 * Processes
 * Context switching
 * System calls
 * Kernel/user-space boundaries
 * Operating system internals
+* Bootloader development
+* Hardware interaction
 
 ## License
 
