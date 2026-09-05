@@ -7,8 +7,6 @@
 
 #include <stdint.h>
 
-#include "memory/pmm.h"
-#include "vmm/vmm.h"
 #include "interrupts/pic.h"
 
 extern void serial_print(const char *str);
@@ -19,7 +17,6 @@ extern void vga_print(const char *str);
 
 extern void pic_remap(uint8_t offset1, uint8_t offset2);
 extern void idt_install(void);
-extern void init_gdt(void);
 extern void init_pit(uint32_t frequency);
 
 extern void mouse_register_interrupt(void);
@@ -30,30 +27,12 @@ extern void ring3_test(void);
 
 void kmain(void)
 {
-    uint16_t count = *(volatile uint16_t *)0x4FF0;
 
 
 
-    init_gdt();
 
 
     pic_remap(0x20, 0x28);
-
-
-    pmm_init();
-    vmm_init();
-
-
-    uint32_t physical_page = pmm_alloc_page();
-
-    map_page(0x00400000, physical_page);
-
-    volatile uint32_t *virtual_page =
-        (volatile uint32_t *)0x00400000;
-
-    *virtual_page = 0x12345678;
-
-    serial_print("VMM map_page OK\n");
 
 
     idt_install();
@@ -70,35 +49,10 @@ void kmain(void)
 
     serial_print("kernel alive.\n");
 
-    serial_print("E820 entries: ");
-    serial_print_hex(count);
-    serial_print("\n");
-
-
-    uint32_t page1 = pmm_alloc_page();
-    uint32_t page2 = pmm_alloc_page();
-
-    serial_print("Page 1: ");
-    serial_print_hex(page1);
-    serial_print("\n");
-
-    serial_print("Page 2: ");
-    serial_print_hex(page2);
-    serial_print("\n");
-
-    pmm_free_page(page1);
-
-    uint32_t page3 = pmm_alloc_page();
-
-    serial_print("Page 3: ");
-    serial_print_hex(page3);
-    serial_print("\n");
-
-
     vga_print("Kernel alive.");
 
     ring3_test();
 
     for (;;)
-        asm volatile ("sti; hlt");
+        asm volatile ("hlt");
 }
