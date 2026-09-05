@@ -233,54 +233,47 @@ The process and context-switching subsystem remains under development and will b
 ## Kernel Structure
 
 ```text
-kernel/
-├── GDT/
-│   ├── gdt.c
-│   ├── gdt.h
-│   ├── gdt.asm
-│   └── gdt_flush.s
-│
-├── drivers/
-│   ├── mouse.c
-│   ├── serial.asm
-│   ├── serial_print.c
-│   └── vga.c
-│
-├── handlers/
-│   ├── handler_0x00.c
-│   ├── handler_0x08.c
-│   ├── handler_central.asm
-│   ├── handler_irq0.c
-│   ├── keyboard_handler.c
-│   ├── syscall.asm
-│   └── syscall.c
-│
-├── idt/
-│   ├── idt.c
-│   ├── idt.h
-│   └── idt.asm
-│
-├── interrupts/
-│   ├── pic.c
-│   └── ...
-│
-├── memory/
-│   ├── pmm.c
-│   └── pmm.h
-│
-├── process/
-│   ├── process.c
-│   └── process.h
-│
-├── timer/
-│   └── pit.c
-│
-├── vmm/
-│   ├── vmm.c
-│   └── vmm.h
-│
-├── kernel.asm
-└── kmain.c
+boot
+│   ├── stage1.S
+│   └── stage2.S
+├── kernel
+│   ├── drivers
+│   │   ├── kernel_panic.c
+│   │   ├── mouse.c
+│   │   ├── serial.asm
+│   │   ├── serial_print.c
+│   │   └── vga.c
+│   ├── handlers
+│   │   ├── handler_0x00.c
+│   │   ├── handler_0x08.c
+│   │   ├── handler_central.asm
+│   │   ├── handler_irq0.c
+│   │   ├── interrupt.h
+│   │   ├── keyboard_handler.c
+│   │   ├── ring_3.asm
+│   │   ├── syscall.asm
+│   │   └── syscall.c
+│   ├── idt
+│   │   ├── idt.asm
+│   │   ├── idt.c
+│   │   └── idt.h
+│   ├── interrupts
+│   │   ├── io.h
+│   │   ├── pic.c
+│   │   └── pic.h
+│   ├── kmain.c
+│   ├── process
+│   │   ├── process.c
+│   │   └── process.h
+│   └── timer
+│       ├── pit.c
+│       └── pit.h
+├── LICENSE
+├── linker.ld
+├── makefile
+└── readme.md
+
+
 ```
 
 ## Build System
