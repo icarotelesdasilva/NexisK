@@ -8,8 +8,13 @@
 #include <stdint.h>
 #include "interrupts/pic.h"
 
-// Definição global real da variável (Aloca espaço na seção .bss)
 int total_entryes = 0;
+
+// Inicialização da GDT e TSS (Adicionado)
+extern void init_gdt(void);
+
+// Função em Assembly que faz o "IRET Trick" para descer para o Ring 3 de forma segura
+extern void switch_to_user_mode(void);
 
 extern void serial_print(const char *str);
 extern void serial_print_hex(uint32_t n);
@@ -27,29 +32,26 @@ extern void mouse_register_interrupt(void);
 extern void ps2_mouse_init(int screen_width, int screen_height);
 extern void unmask_mouse_irq(void);
 
-extern void ring3_test(void);
-
 void kmain(void)
 {
-    pic_remap(0x20, 0x28);
+    
+    init_gdt();
 
-    idt_install();
+    pic_remap(0x20, 0x28);
+    idt_install();         
 
     init_pit(1000);
-
     mouse_register_interrupt();
     ps2_mouse_init(800, 600);
     unmask_mouse_irq();
 
     vga_clear();
-
     serial_print("kernel alive.\n");
-    
     memory();
-
     vga_print("Kernel alive.");
 
-    ring3_test();
+
+    switch_to_user_mode();  
 
     for (;;)
         asm volatile ("hlt");

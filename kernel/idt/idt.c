@@ -45,6 +45,5 @@
 		idt_set_gate(33, (uintptr_t)keyboard_isr, 0x08, 0x8E);
 		idt_set_gate(44, (uint32_t)irq12_stub, 0x08, 0x8E);
 		idt_set_gate(0x80, (uint32_t)&syscall_handler, 0x08, 0xEE);    
-		
 		idt_load();
 }
