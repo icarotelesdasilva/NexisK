@@ -430,8 +430,8 @@ v0.5.0  Virtual Memory / Paging / PS/2
 v0.6.0  GDT / Ring 3 / TSS
 v0.7.0  Basic Syscall Interface
 v0.7.1  Ring 3 Syscall Validation
-v0.7.3  Basic VMM Page Mapping + Boot/Build Refactoring
-v0.8.0  Bootloader Refactor / Real Hardware Boot / Boot Menu
+v0.7.3  Basic VMM Page Mapping + Boot/Build Refactoring and bootloader refactor update
+
 ```
 
 ## Project Goals
