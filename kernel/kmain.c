@@ -6,11 +6,15 @@
  */
 
 #include <stdint.h>
-
 #include "interrupts/pic.h"
+
+// Definição global real da variável (Aloca espaço na seção .bss)
+int total_entryes = 0;
 
 extern void serial_print(const char *str);
 extern void serial_print_hex(uint32_t n);
+
+extern void memory(void);
 
 extern void vga_clear(void);
 extern void vga_print(const char *str);
@@ -27,16 +31,9 @@ extern void ring3_test(void);
 
 void kmain(void)
 {
-
-
-
-
-
     pic_remap(0x20, 0x28);
 
-
     idt_install();
-
 
     init_pit(1000);
 
@@ -44,10 +41,11 @@ void kmain(void)
     ps2_mouse_init(800, 600);
     unmask_mouse_irq();
 
-
     vga_clear();
 
     serial_print("kernel alive.\n");
+    
+    memory();
 
     vga_print("Kernel alive.");
 

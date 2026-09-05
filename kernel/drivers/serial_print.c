@@ -36,18 +36,35 @@
 
             static int serial_coluna = 0;
             static int serial_linha = 0;
+// ... (seu código inicial de init_serial, serial_putc e serial_print permanece igual)
 
-            void serial_print_hex(uint32_t n) {
-                char hex_chars[] = "0123456789ABCDEF";
-                char buffer[11];
-                buffer[0] = '0';
-                buffer[1] = 'x';
-                buffer[10] = '\0';
+// MANTENHA A DE 32 BITS (O compilador e o loop do type precisam dela)
+void serial_print_hex(uint32_t n) {
+    char hex_chars[] = "0123456789ABCDEF";
+    char buffer[11];
+    buffer[0] = '0';
+    buffer[1] = 'x';
+    buffer[10] = '\0';
 
-                for (int i = 7; i >= 0; i--) {
-                    buffer[2 + i] = hex_chars[n & 0xF];
-                    n >>= 4;
-                }
+    for (int i = 7; i >= 0; i--) {
+        buffer[2 + i] = hex_chars[n & 0xF];
+        n >>= 4;
+    }
 
-                serial_print(buffer);
-            }
+    serial_print(buffer);
+}
+
+void serial_print_hex64(uint64_t n) {
+    char hex_chars[] = "0123456789ABCDEF";
+    char buffer[19]; 
+    buffer[0] = '0';
+    buffer[1] = 'x';
+    buffer[18] = '\0'; 
+
+    for (int i = 15; i >= 0; i--) {
+        buffer[2 + i] = hex_chars[n & 0xF];
+        n >>= 4;
+    }
+
+    serial_print(buffer);
+}

@@ -109,7 +109,7 @@ memory_request:
     jne .error
 
     add di, 24
-    inc word [e820_count - stage2]
+    inc word [es:0x7000]
 
     test ebx, ebx
     jnz .e820_loop
@@ -150,7 +150,9 @@ protected_mode:
     mov ss, ax
 
     mov esp, 0x00090000
-
+    
+    movzx eax, word [e820_count - stage2]
+    push eax
     call kmain
 
 

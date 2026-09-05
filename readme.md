@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <strong>Current Release: <a href="https://github.com/icarotelesdasilva/NexisK/releases/tag/v0.8.5">v0.8.5</a></strong>
+  <strong>Current Release: <a href="https://github.com/icarotelesdasilva/NexisK/releases/tag/v0.8.6">v0.8.6</a></strong>
 </p>
 
 ## Overview
@@ -35,7 +35,7 @@ The project focuses on low-level systems programming, x86 architecture, hardware
 
 NexisK is written primarily in C and NASM assembly and is developed without relying on an external bootloader such as GRUB or Limine.
 
-The repository also contains a custom BIOS bootloader responsible for initializing the machine, presenting a boot menu and loading the selected kernel.
+The repository also contains a custom BIOS bootloader responsible for initializing the machine, presenting a boot menu, detecting the system memory map and loading the selected kernel.
 
 NexisK is the kernel. The bootloader is a separate component used to bootstrap it.
 
@@ -51,6 +51,7 @@ Its purpose is to explore the mechanisms involved in implementing a kernel, incl
 * x86 protected mode
 * Interrupt handling
 * Hardware interrupts
+* Memory discovery
 * Memory management
 * Privilege levels
 * System calls
@@ -75,7 +76,10 @@ The project is intentionally developed from the lowest levels upward.
        └─────────────────┼─────────────────┘
                          │
                          ▼
-                       Memory
+                 Memory Discovery
+                         │
+                         ▼
+                    Memory Mgmt
                          │
                          ▼
                       Processes
@@ -109,6 +113,7 @@ NexisK
   └── Kernel
        ├── CPU management
        ├── Interrupt handling
+       ├── Memory discovery
        ├── Memory management
        ├── Process management
        ├── Scheduling
@@ -142,6 +147,7 @@ The kernel currently provides infrastructure for:
 * Basic system-call infrastructure
 * Initial process/context infrastructure
 * BIOS E820 memory map detection
+* Kernel-side reporting of detected memory regions
 
 Several previously implemented kernel subsystems are currently temporarily removed while the new bootloader architecture is stabilized.
 
@@ -155,7 +161,11 @@ These include:
 * Paging
 * Dynamic virtual page mapping
 
-The current E820 implementation is used for physical memory discovery at boot. Full physical and virtual memory management are planned to be reintroduced separately.
+The current E820 implementation is used for physical memory discovery at boot.
+
+The detected memory map is now successfully passed into the kernel and reported through kernel output.
+
+Full physical and virtual memory management are planned to be reintroduced separately.
 
 ## Features
 
@@ -267,13 +277,27 @@ This subsystem is still under development and will evolve alongside memory manag
 
 ### Memory Map Detection
 
-The bootloader uses the BIOS `INT 15h, E820h` interface to detect the system's physical memory map.
+NexisK uses the BIOS `INT 15h, E820h` interface to detect the system's physical memory map during boot.
 
-The detected memory regions are collected during the boot process and made available for later kernel memory-management work.
+The loader collects the returned memory regions and the kernel reports the detected entries.
 
-The E820 implementation provides the foundation for future:
+Example output:
 
-* Physical memory discovery
+```text
+kernel alive.
+
+Base: 0x0000000000000000 | Size: 0x000000000009FC00 | Type: 0x00000001
+Base: 0x000000000009FC00 | Size: 0x0000000000000400 | Type: 0x00000002
+Base: 0x00000000000F0000 | Size: 0x0000000000010000 | Type: 0x00000002
+Base: 0x0000000000100000 | Size: 0x0000000007EE0000 | Type: 0x00000001
+Base: 0x0000000007FE0000 | Size: 0x0000000000020000 | Type: 0x00000002
+Base: 0x00000000FFFC0000 | Size: 0x0000000000040000 | Type: 0x00000002
+```
+
+This provides the foundation for future physical memory management.
+
+Planned memory-management work includes:
+
 * Physical page allocation
 * Physical page freeing
 * Paging
@@ -849,7 +873,7 @@ NexisK uses version numbers to track major development milestones.
 
 ### Current Release
 
-**[v0.8.5](https://github.com/icarotelesdasilva/NexisK/releases/tag/v0.8.5)**
+**[v0.8.6](https://github.com/icarotelesdasilva/NexisK/releases/tag/v0.8.6)**
 
 ### Recent Milestones
 
@@ -862,6 +886,7 @@ NexisK uses version numbers to track major development milestones.
 | v0.7.1  | Ring 3 Syscall Validation                         |
 | v0.7.3  | Basic VMM Page Mapping and Boot/Build Refactoring |
 | v0.8.5  | Bootloader refactor and E820 memory map detection |
+| v0.8.6  | Verified E820 memory map reporting in the kernel  |
 
 Historical versions may contain kernel subsystems that are not present in the current implementation.
 
@@ -883,10 +908,10 @@ CPU Initialization
 Protected Mode
     │
     ▼
-Interrupts
+Memory Discovery
     │
     ▼
-Memory Discovery
+Interrupts
     │
     ▼
 Memory Management
@@ -945,7 +970,7 @@ The current boot path is based on the traditional BIOS environment.
 
 The full PMM, VMM and paging implementations are currently being rebuilt after the bootloader refactor.
 
-The current implementation provides BIOS E820 memory map detection.
+The current implementation provides BIOS E820 memory map detection and kernel-side reporting of the detected regions.
 
 ### Privilege Levels
 
