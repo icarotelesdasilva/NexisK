@@ -24,3 +24,4 @@ CMakeUserPresets.json
 build/
 *bin
 *.o
+settings.json

@@ -6,7 +6,7 @@
  */
 
 #include <stdint.h>
-
+#include "pmm.h"
 #include "interrupts/pic.h"
 #include "memory/memory_learn.h"
 
