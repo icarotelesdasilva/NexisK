@@ -11,7 +11,6 @@ typedef struct __attribute__((packed)) {
 } memory_map;
 
 void memory(void);
-
-
+void pmm_init(void);
 
 #endif

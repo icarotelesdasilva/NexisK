@@ -5,41 +5,35 @@
 </p>
 
 <p align="center">
-  <a href="#overview">Overview</a> •
-  <a href="#features">Features</a> •
-  <a href="#architecture">Architecture</a> •
-  <a href="#testing">Testing</a> •
-  <a href="#building">Building</a> •
-  <a href="#boot-process">Boot Process</a> •
-  <a href="#roadmap">Roadmap</a>
-</p>
-
-<p align="center">
   <img src="https://img.shields.io/badge/Architecture-i386-informational?style=flat-square" alt="Architecture">
   <img src="https://img.shields.io/badge/Language-C%20%2F%20NASM-blue?style=flat-square" alt="Language">
-  <img src="https://img.shields.io/badge/Build-Make-000000?style=flat-square" alt="Make">
+  <img src="https://img.shields.io/badge/Build-Make-000000?style=flat-square" alt="Build">
   <img src="https://img.shields.io/badge/Tested-QEMU%20%2B%20Real%20Hardware-orange?style=flat-square" alt="Testing">
   <img src="https://img.shields.io/badge/License-GPL--2.0-green?style=flat-square" alt="License">
   <img src="https://img.shields.io/badge/Status-Experimental-orange?style=flat-square" alt="Status">
 </p>
 
 <p align="center">
-  <strong>Current Release: <a href="https://github.com/icarotelesdasilva/NexisK/releases/tag/v0.8.6">v0.8.6</a></strong>
+  <strong>Current Release: v0.9.0</strong>
 </p>
+
+---
 
 ## Overview
 
 NexisK is an experimental operating system kernel developed from scratch for the i386 architecture.
 
-The project focuses on low-level systems programming, x86 architecture, hardware interaction, interrupt handling, kernel initialization, bootloader development and the foundations required to build a kernel from the ground up.
+The project focuses on low-level systems programming, x86 architecture, hardware interaction, interrupt handling, memory management, process infrastructure, kernel initialization and bootloader development.
 
-NexisK is written primarily in C and NASM assembly and is developed without relying on an external bootloader such as GRUB or Limine.
+NexisK is written primarily in C and NASM assembly and does not rely on an external bootloader such as GRUB or Limine.
 
-The repository also contains a custom BIOS bootloader responsible for initializing the machine, presenting a boot menu, detecting the system memory map and loading the selected kernel.
+The project uses a custom BIOS bootloader responsible for initializing the machine, detecting the physical memory map and loading the kernel.
 
-NexisK is the kernel. The bootloader is a separate component used to bootstrap it.
+NexisK is the kernel. The bootloader is maintained as a separate component.
 
 The project is experimental and actively evolving.
+
+---
 
 ## What Is NexisK?
 
@@ -51,8 +45,9 @@ Its purpose is to explore the mechanisms involved in implementing a kernel, incl
 * x86 protected mode
 * Interrupt handling
 * Hardware interrupts
-* Memory discovery
-* Memory management
+* Physical memory discovery
+* Physical memory management
+* Virtual memory
 * Privilege levels
 * System calls
 * Process management
@@ -65,33 +60,34 @@ The current target architecture is 32-bit x86 / i386.
 The project is intentionally developed from the lowest levels upward.
 
 ```text
-                    NexisK Kernel
-                         │
-       ┌─────────────────┼─────────────────┐
-       │                 │                 │
-       ▼                 ▼                 ▼
-      CPU            Interrupts         Drivers
-       │                 │                 │
-       │                 │                 │
-       └─────────────────┼─────────────────┘
-                         │
-                         ▼
-                 Memory Discovery
-                         │
-                         ▼
-                    Memory Mgmt
-                         │
-                         ▼
-                      Processes
-                         │
-                         ▼
-                   Context Switching
-                         │
-                         ▼
-                    System Calls
+                     NexisK Kernel
+                           │
+          ┌────────────────┼────────────────┐
+          │                │                │
+          ▼                ▼                ▼
+         CPU           Interrupts        Drivers
+          │                │                │
+          └────────────────┼────────────────┘
+                           │
+                           ▼
+                  Memory Discovery
+                           │
+                           ▼
+                    Memory Management
+                           │
+                           ▼
+                       Processes
+                           │
+                           ▼
+                    Context Switching
+                           │
+                           ▼
+                     System Calls
 ```
 
-Some kernel subsystems are currently under reconstruction following the bootloader architecture refactor.
+Some subsystems are still under active reconstruction and development.
+
+---
 
 ## Project Scope
 
@@ -107,23 +103,11 @@ It is not currently intended to provide:
 
 The primary goal is to develop a small, understandable and progressively more capable kernel.
 
-```text
-NexisK
-  │
-  └── Kernel
-       ├── CPU management
-       ├── Interrupt handling
-       ├── Memory discovery
-       ├── Memory management
-       ├── Process management
-       ├── Scheduling
-       ├── System calls
-       └── Hardware interfaces
-```
+---
 
 ## Current Status
 
-The current development priority is a reliable bare-metal boot path and bootloader architecture.
+The current development priority is building a reliable bare-metal kernel and boot architecture.
 
 The kernel currently provides infrastructure for:
 
@@ -135,6 +119,7 @@ The kernel currently provides infrastructure for:
 * Bootable disk image generation
 * Bootable ISO generation
 * Real hardware boot validation
+* Global Descriptor Table
 * Interrupt Descriptor Table
 * CPU exception handlers
 * Hardware interrupt handling
@@ -147,33 +132,32 @@ The kernel currently provides infrastructure for:
 * Basic system-call infrastructure
 * Initial process/context infrastructure
 * BIOS E820 memory map detection
-* Kernel-side reporting of detected memory regions
+* Kernel-side memory map reporting
+* Initial Physical Memory Manager
 
-Several previously implemented kernel subsystems are currently temporarily removed while the new bootloader architecture is stabilized.
+The current memory-management implementation is being rebuilt incrementally.
 
-These include:
+The current PMM stage is responsible for consuming the E820 map and identifying usable physical memory regions.
 
-* GDT
-* TSS
-* Ring 3
-* Physical Memory Manager
-* Virtual Memory Manager
-* Paging
-* Dynamic virtual page mapping
+The PMM currently:
 
-The current E820 implementation is used for physical memory discovery at boot.
+* Reads the E820 entry count supplied by the bootloader
+* Reads the E820 memory map
+* Identifies entries with `Type 1`
+* Iterates through usable memory in 4 KiB page increments
+* Provides the initial foundation for physical page tracking
 
-The detected memory map is now successfully passed into the kernel and reported through kernel output.
+Full page allocation, freeing and bitmap-based page state management are still under development.
 
-Full physical and virtual memory management are planned to be reintroduced separately.
+---
 
-## Features
+# Features
 
-### Custom BIOS Bootloader
+## Custom BIOS Bootloader
 
 NexisK uses its own x86 BIOS bootloader instead of relying on an external bootloader.
 
-The current boot architecture is divided into two stages:
+The boot architecture is divided into two stages:
 
 ```text
 BIOS
@@ -187,16 +171,14 @@ Stage 2
  ├── Boot initialization
  ├── Boot menu
  ├── Kernel selection
- ├── E820 memory map detection
+ ├── E820 memory detection
  └── Kernel loading
-       │
-       ▼
-   NexisK Kernel
+          │
+          ▼
+      NexisK Kernel
 ```
 
-The bootloader is designed to provide a minimal and controlled environment for starting the kernel.
-
-It currently supports:
+The bootloader currently supports:
 
 * BIOS boot
 * Two-stage boot process
@@ -205,13 +187,32 @@ It currently supports:
 * Kernel loading
 * E820 memory map detection
 * Bootable disk image generation
+* Bootable ISO generation
 * Real hardware boot
 
 The bootloader is maintained separately from the kernel implementation.
 
-### Interrupts
+---
 
-The kernel contains an Interrupt Descriptor Table (IDT) and infrastructure for processor exceptions and hardware interrupts.
+## CPU and Protected Mode
+
+NexisK targets the i386 architecture and executes the kernel in 32-bit protected mode.
+
+Current CPU-related infrastructure includes:
+
+* i386 target
+* Protected-mode execution
+* Global Descriptor Table
+* Segment configuration
+* Kernel execution environment
+
+Future work includes expanding privilege-level support and improving CPU initialization.
+
+---
+
+## Interrupts
+
+The kernel contains an Interrupt Descriptor Table and infrastructure for processor exceptions and hardware interrupts.
 
 Current interrupt-related components include:
 
@@ -219,13 +220,15 @@ Current interrupt-related components include:
 * CPU exception handlers
 * PIC remapping
 * PIT
-* Keyboard interrupt handling
-* PS/2 mouse interrupt handling
+* Keyboard interrupts
+* PS/2 mouse interrupts
 * System-call interrupt vector
 
-The interrupt subsystem provides the foundation required for future scheduling, process management and hardware drivers.
+The interrupt subsystem provides the foundation required for future scheduling, process management and additional hardware drivers.
 
-### System Calls
+---
+
+## System Calls
 
 NexisK contains a basic system-call mechanism using:
 
@@ -235,19 +238,17 @@ int 0x80
 
 The syscall number is passed through the `EAX` register.
 
-The current implementation is intentionally minimal and is primarily used to validate the kernel's system-call path.
-
-Current execution flow:
+The current implementation is intentionally minimal and is primarily used to validate the kernel system-call path.
 
 ```text
-User / Test Context
+Execution Context
        │
        │ int 0x80
        ▼
-   IDT[0x80]
+    IDT[0x80]
        │
        ▼
-syscall_handler
+ syscall handler
        │
        ▼
  Kernel syscall
@@ -256,9 +257,11 @@ syscall_handler
       iret
 ```
 
-The system-call interface will be expanded as process and privilege-level infrastructure is rebuilt.
+The syscall interface will evolve alongside process and privilege-level support.
 
-### Kernel I/O
+---
+
+## Kernel I/O
 
 NexisK currently provides basic low-level I/O facilities including:
 
@@ -269,17 +272,15 @@ NexisK currently provides basic low-level I/O facilities including:
 
 Serial output is particularly useful for debugging kernel behavior under QEMU.
 
-### Process Infrastructure
+---
 
-The repository contains initial process-related infrastructure and context-switching groundwork.
+# Memory Management
 
-This subsystem is still under development and will evolve alongside memory management and privilege-level support.
+## E820 Memory Discovery
 
-### Memory Map Detection
+NexisK uses the BIOS `INT 15h, E820h` interface to discover the physical memory map during boot.
 
-NexisK uses the BIOS `INT 15h, E820h` interface to detect the system's physical memory map during boot.
-
-The loader collects the returned memory regions and the kernel reports the detected entries.
+The bootloader collects the memory regions and exposes the resulting map to the kernel.
 
 Example output:
 
@@ -294,84 +295,90 @@ Base: 0x0000000007FE0000 | Size: 0x0000000000020000 | Type: 0x00000002
 Base: 0x00000000FFFC0000 | Size: 0x0000000000040000 | Type: 0x00000002
 ```
 
-This provides the foundation for future physical memory management.
+The kernel currently identifies usable E820 regions and reports them through serial output.
 
-Planned memory-management work includes:
+---
 
+## Physical Memory Manager
+
+NexisK now contains the initial implementation of its Physical Memory Manager.
+
+The PMM receives the E820 memory map and identifies usable physical memory.
+
+Its current basic flow is:
+
+```text
+Bootloader
+    │
+    ▼
+BIOS E820
+    │
+    ▼
+E820 Memory Map
+    │
+    ▼
+NexisK Kernel
+    │
+    ▼
+pmm_init()
+    │
+    ├── Read E820 entries
+    ├── Find Type 1 regions
+    └── Iterate through 4 KiB pages
+```
+
+The current implementation is intentionally simple and is being developed incrementally.
+
+The next stages include:
+
+* Physical page state tracking
+* Page blocking/reservation
+* Bitmap-based page tracking
 * Physical page allocation
 * Physical page freeing
+* Kernel memory reservation
+* Bootloader memory reservation
+* Better handling of memory-map boundaries
+
+---
+
+## Virtual Memory
+
+Virtual memory is planned to be built on top of the physical memory manager.
+
+Planned functionality includes:
+
 * Paging
 * Virtual address mapping
 * Page fault handling
+* Dynamic page mapping
 * Kernel/user memory permissions
 * Per-process address spaces
 
-Full PMM and VMM implementations remain planned work.
+The VMM is not yet considered complete.
 
-## Testing
+---
 
-NexisK is tested in both virtualized environments and on real x86 hardware.
+# Process Infrastructure
 
-### QEMU
+The repository contains initial process-related infrastructure and context-switching groundwork.
 
-QEMU is the primary environment for rapid development, debugging and regression testing.
+This subsystem is still under development and will evolve alongside memory management and privilege-level support.
 
-The project uses:
+Planned functionality includes:
 
-```text
-qemu-system-i386
-```
+* Process creation
+* Process destruction
+* PID management
+* Address spaces
+* Context switching
+* Scheduler
+* Preemptive multitasking
+* Process isolation
 
-The normal development command is:
+---
 
-```bash
-make run
-```
-
-A development/debugging mode is also available:
-
-```bash
-make dev
-```
-
-The debug target enables additional QEMU diagnostics and writes a log to:
-
-```text
-build/qemu.log
-```
-
-This makes it possible to investigate low-level problems involving:
-
-* CPU resets
-* Interrupts
-* Guest errors
-* Unimplemented instructions
-* MMU activity
-* Kernel execution
-
-### Real Hardware
-
-NexisK is also tested on real x86 PCs.
-
-Real-hardware testing is an important part of the project because a kernel that works in an emulator is not automatically guaranteed to behave correctly on physical machines.
-
-Testing on physical hardware helps validate behavior involving:
-
-* BIOS implementations
-* CPU initialization
-* Hardware interrupts
-* PIC/PIT behavior
-* PS/2 devices
-* VGA hardware
-* Boot media
-* Timing
-* Hardware-specific behavior
-
-The bootloader has been validated on real hardware.
-
-Hardware compatibility is still evolving. Successful execution on one physical machine does not imply compatibility with every x86 PC.
-
-## Architecture
+# Architecture
 
 | Component               | Current Implementation |
 | ----------------------- | ---------------------- |
@@ -383,7 +390,10 @@ Hardware compatibility is still evolving. Successful execution on one physical m
 | Bootloader              | Custom BIOS bootloader |
 | Boot Structure          | Stage 1 + Stage 2      |
 | Boot Menu               | Yes                    |
-| Memory Map              | BIOS E820              |
+| Memory Discovery        | BIOS E820              |
+| Physical Memory Manager | Initial implementation |
+| Virtual Memory Manager  | In development         |
+| Paging                  | In development         |
 | Interrupts              | IDT + PIC              |
 | Timer                   | PIT                    |
 | Display                 | VGA text mode          |
@@ -391,42 +401,23 @@ Hardware compatibility is still evolving. Successful execution on one physical m
 | Input                   | Keyboard / PS/2 mouse  |
 | Syscalls                | `int 0x80`             |
 | Process Infrastructure  | Initial                |
-| Physical Memory Manager | Temporarily removed    |
-| Virtual Memory Manager  | Temporarily removed    |
-| Paging                  | Temporarily removed    |
-| Ring 3                  | Temporarily removed    |
 | Emulator                | QEMU                   |
 | Physical Testing        | Real x86 hardware      |
 | Build System            | GNU Make               |
 | License                 | GPL-2.0-only           |
 
-## Kernel Architecture
+---
+
+# Kernel Architecture
 
 The kernel is organized into independent subsystems.
-
-The current source tree includes areas for:
-
-```text
-kernel/
-├── drivers/
-├── handlers/
-├── idt/
-├── interrupts/
-├── process/
-├── timer/
-└── kmain.c
-```
-
-The architecture is expected to change as the project evolves.
-
-The long-term direction is to establish clear boundaries between:
 
 ```text
 CPU
  │
  ├── GDT
- ├── TSS
- └── Privilege Levels
+ ├── Protected Mode
+ └── Privilege Infrastructure
        │
        ▼
 Interrupts
@@ -458,7 +449,11 @@ System Calls
 User Space
 ```
 
-## Project Structure
+The architecture is expected to change as the project evolves.
+
+---
+
+# Project Structure
 
 ```text
 NexisK/
@@ -475,6 +470,10 @@ NexisK/
 │   │   ├── serial_print.c
 │   │   └── vga.c
 │   │
+│   ├── gdt/
+│   │   ├── gdt.asm
+│   │   └── gdt.c
+│   │
 │   ├── handlers/
 │   │   ├── handler_0x00.c
 │   │   ├── handler_0x08.c
@@ -482,7 +481,6 @@ NexisK/
 │   │   ├── handler_irq0.c
 │   │   ├── interrupt.h
 │   │   ├── keyboard_handler.c
-│   │   ├── ring_3.asm
 │   │   ├── syscall.asm
 │   │   └── syscall.c
 │   │
@@ -495,6 +493,13 @@ NexisK/
 │   │   ├── io.h
 │   │   ├── pic.c
 │   │   └── pic.h
+│   │
+│   ├── memory/
+│   │   ├── memory_learn.h
+│   │   ├── pmm.h
+│   │   └── memory_manager/
+│   │       ├── memory.c
+│   │       └── pmm.c
 │   │
 │   ├── process/
 │   │   ├── process.c
@@ -512,11 +517,9 @@ NexisK/
 └── readme.md
 ```
 
-The `kernel/` directory contains the NexisK kernel source.
+---
 
-The `boot/` directory contains the separate bootloader implementation.
-
-## Build System
+# Build System
 
 NexisK uses a custom GNU Make build system.
 
@@ -529,33 +532,9 @@ The Makefile automatically:
 5. Generates the bootable disk image.
 6. Creates the bootable ISO.
 
-The build pipeline can be represented as:
-
-```text
-C / NASM Sources
-       │
-       ▼
- Kernel Objects
-       │
-       ├───────────────┐
-       │               │
-       ▼               ▼
-   Stage 1          Stage 2
-       │               │
-       └───────┬───────┘
-               ▼
-            disk.img
-               │
-               ▼
-            boot.img
-               │
-               ▼
-          NexisK.iso
-```
-
 The kernel is compiled as a freestanding 32-bit i386 target.
 
-The current compiler configuration includes:
+Important compiler options include:
 
 ```text
 -m32
@@ -570,7 +549,9 @@ The current compiler configuration includes:
 
 This keeps the kernel independent from the host operating system's standard runtime.
 
-## Requirements
+---
+
+# Requirements
 
 NexisK is currently developed and tested primarily on Linux.
 
@@ -587,6 +568,7 @@ On Debian or Ubuntu:
 
 ```bash
 sudo apt update
+
 sudo apt install \
     build-essential \
     gcc \
@@ -597,7 +579,9 @@ sudo apt install \
     genisoimage
 ```
 
-## Building
+---
+
+# Building
 
 Clone the repository:
 
@@ -612,7 +596,7 @@ Build the kernel and bootable ISO:
 make
 ```
 
-The generated files are placed inside:
+Generated files are placed inside:
 
 ```text
 build/
@@ -624,9 +608,11 @@ The main bootable image is:
 build/NexisK.iso
 ```
 
-## Running with QEMU
+---
 
-Run the kernel through the generated ISO:
+# Running with QEMU
+
+Run NexisK using:
 
 ```bash
 make run
@@ -638,11 +624,13 @@ This starts:
 qemu-system-i386
 ```
 
-with the NexisK ISO attached as a CD-ROM.
+with the generated ISO attached as a CD-ROM.
 
-Serial output is connected to the terminal, making it useful for development and debugging.
+Serial output is connected to the terminal and is used extensively for kernel debugging.
 
-## Development Debug Mode
+---
+
+# Development Debug Mode
 
 For deeper QEMU diagnostics:
 
@@ -650,24 +638,27 @@ For deeper QEMU diagnostics:
 make dev
 ```
 
-This enables additional debugging information and writes the QEMU log to:
+The debug configuration writes the QEMU log to:
 
 ```text
 build/qemu.log
 ```
 
-The debug configuration enables diagnostics for areas such as:
+This is useful for investigating:
 
-* Guest errors
-* Unimplemented behavior
-* Interrupts
 * CPU resets
+* Interrupts
+* Guest errors
+* Unimplemented instructions
 * MMU activity
-* Protected execution events
+* Protected-mode execution
+* Kernel execution
 
-## Cleaning the Build
+---
 
-To remove all generated build artifacts:
+# Cleaning the Build
+
+To remove generated build artifacts:
 
 ```bash
 make clean
@@ -679,57 +670,60 @@ A clean build can then be produced with:
 make
 ```
 
-## Boot Process
+---
+
+# Boot Process
 
 The current boot process is approximately:
 
 ```text
-                    BIOS
-                     │
-                     ▼
-                 Stage 1
-                     │
-                     ▼
-                 Stage 2
-                     │
-          ┌──────────┼──────────┐
-          │          │          │
-          ▼          ▼          ▼
-      Initialize   Boot Menu   Memory
-       Environment  Selection   Detection
-                                  │
-                                  ▼
-                              E820 Map
-                                  │
-                                  ▼
-                            Kernel Loading
-                                  │
-                                  ▼
-                           NexisK Kernel
-                                  │
-                                  ▼
-                                kmain
-                                  │
-                       ┌──────────┼──────────┐
-                       │          │          │
-                       ▼          ▼          ▼
-                      IDT        PIC        PIT
-                       │          │          │
-                       └──────────┼──────────┘
-                                  │
-                                  ▼
-                            Kernel Runtime
+                         BIOS
+                           │
+                           ▼
+                       Stage 1
+                           │
+                           ▼
+                       Stage 2
+                           │
+             ┌─────────────┼─────────────┐
+             │             │             │
+             ▼             ▼             ▼
+       Initialization   Boot Menu     E820 Detection
+                                         │
+                                         ▼
+                                    E820 Memory Map
+                                         │
+                                         ▼
+                                    Kernel Loading
+                                         │
+                                         ▼
+                                    NexisK Kernel
+                                         │
+                                         ▼
+                                       kmain
+                                         │
+                         ┌───────────────┼───────────────┐
+                         │               │               │
+                         ▼               ▼               ▼
+                        GDT             IDT             PMM
+                         │               │               │
+                         └───────────────┼───────────────┘
+                                         │
+                                         ▼
+                                   Kernel Runtime
 ```
 
-The bootloader is responsible for initializing the machine, detecting the available physical memory map, getting the kernel into memory and transferring control to it.
+The bootloader is responsible for initializing the machine, detecting the available physical memory map, loading the kernel and transferring control to it.
 
 The kernel then initializes its own runtime subsystems.
 
-## Bootable Image
+---
+
+# Bootable Image
 
 The build system creates a raw boot image and packages it into an ISO.
 
-The generated files include:
+Generated files include:
 
 ```text
 build/
@@ -738,15 +732,16 @@ build/
 ├── disk.img
 ├── iso/
 │   └── boot.img
-├── NexisK.iso
-└── qemu.log
+└── NexisK.iso
 ```
 
-The boot image is currently created with a 1.44 MB disk-image size and then packaged as an El Torito bootable ISO.
+The boot image is currently created using a 1.44 MB disk-image layout and packaged as an El Torito bootable ISO.
 
-## Development Roadmap
+---
 
-### Bootloader
+# Development Roadmap
+
+## Bootloader
 
 * [x] Custom BIOS bootloader
 * [x] Stage 1
@@ -763,17 +758,17 @@ The boot image is currently created with a 1.44 MB disk-image size and then pack
 * [ ] Improved hardware compatibility
 * [ ] UEFI support
 
-### CPU and Privilege Management
+## CPU and Privilege Management
 
 * [x] i386 target
 * [x] Protected-mode foundation
-* [ ] Reimplement GDT
-* [ ] Reimplement TSS
-* [ ] Reimplement Ring 3
-* [ ] Restore kernel/user privilege separation
-* [ ] Improve CPU initialization
+* [x] GDT
+* [ ] TSS improvements
+* [ ] Ring 3
+* [ ] Kernel/user privilege separation
+* [ ] Improved CPU initialization
 
-### Interrupts
+## Interrupts
 
 * [x] IDT
 * [x] CPU exception handlers
@@ -785,20 +780,28 @@ The boot image is currently created with a 1.44 MB disk-image size and then pack
 * [ ] More complete interrupt abstraction
 * [ ] Improved interrupt dispatching
 
-### Memory Management
+## Memory Management
 
 * [x] BIOS E820 memory map detection
-* [ ] Reimplement Physical Memory Manager
-* [ ] Reimplement Virtual Memory Manager
-* [ ] Reimplement paging
+* [x] Kernel-side E820 processing
+* [x] Initial Physical Memory Manager
+* [x] Detection of usable physical memory regions
+* [x] 4 KiB page iteration
+* [ ] Physical page state tracking
+* [ ] Page blocking/reservation
+* [ ] PMM bitmap
 * [ ] Physical page allocation
 * [ ] Physical page freeing
+* [ ] Kernel memory reservation
+* [ ] Bootloader memory reservation
+* [ ] Virtual Memory Manager
+* [ ] Paging
 * [ ] Dynamic page mapping
 * [ ] Page fault handling
 * [ ] Kernel/user memory permissions
 * [ ] Per-process address spaces
 
-### Processes
+## Processes
 
 * [x] Initial process infrastructure
 * [x] Initial context-switching infrastructure
@@ -811,7 +814,7 @@ The boot image is currently created with a 1.44 MB disk-image size and then pack
 * [ ] Preemptive multitasking
 * [ ] Process isolation
 
-### System Calls
+## System Calls
 
 * [x] Basic syscall interface
 * [x] `int 0x80` entry
@@ -821,7 +824,7 @@ The boot image is currently created with a 1.44 MB disk-image size and then pack
 * [ ] File-related syscalls
 * [ ] User-space API
 
-### Hardware
+## Hardware
 
 * [x] VGA text output
 * [x] Serial output
@@ -832,7 +835,7 @@ The boot image is currently created with a 1.44 MB disk-image size and then pack
 * [ ] LBA support
 * [ ] Hardware abstraction improvements
 
-### Storage
+## Storage
 
 * [ ] Disk abstraction
 * [ ] Disk driver
@@ -841,7 +844,7 @@ The boot image is currently created with a 1.44 MB disk-image size and then pack
 * [ ] Initial filesystem
 * [ ] File operations
 
-### Future Architecture
+## Future Architecture
 
 * [ ] More complete user-space support
 * [ ] Stable kernel ABI
@@ -849,48 +852,35 @@ The boot image is currently created with a 1.44 MB disk-image size and then pack
 * [ ] UEFI boot support
 * [ ] x86-64 transition
 
-## Temporarily Removed Subsystems
+---
 
-The following subsystems existed in previous versions of NexisK but were intentionally removed during the bootloader refactor:
-
-* GDT
-* TSS
-* Ring 3
-* Physical Memory Manager
-* Virtual Memory Manager
-* Paging
-* Dynamic page mapping
-
-This is an intentional development step rather than an abandonment of these components.
-
-The current E820 implementation provides physical memory discovery while the full memory-management stack is being rebuilt.
-
-The current priority is to establish a stable bootloader and real-hardware boot foundation before rebuilding the higher-level kernel subsystems.
-
-## Versioning
+# Versioning
 
 NexisK uses version numbers to track major development milestones.
 
-### Current Release
+## Current Release
 
-**[v0.8.6](https://github.com/icarotelesdasilva/NexisK/releases/tag/v0.8.6)**
+**v0.9.0 — Initial Physical Memory Manager**
 
-### Recent Milestones
+## Recent Milestones
 
-| Version | Milestone                                         |
-| ------- | ------------------------------------------------- |
-| v0.4.0  | Physical Memory Manager                           |
-| v0.5.0  | Virtual Memory / Paging / PS/2                    |
-| v0.6.0  | GDT / Ring 3 / TSS                                |
-| v0.7.0  | Basic System Call Interface                       |
-| v0.7.1  | Ring 3 Syscall Validation                         |
-| v0.7.3  | Basic VMM Page Mapping and Boot/Build Refactoring |
-| v0.8.5  | Bootloader refactor and E820 memory map detection |
-| v0.8.6  | Verified E820 memory map reporting in the kernel  |
+| Version    | Milestone                                               |
+| ---------- | ------------------------------------------------------- |
+| v0.4.0     | Physical Memory Manager                                 |
+| v0.5.0     | Virtual Memory / Paging / PS/2                          |
+| v0.6.0     | GDT / Ring 3 / TSS                                      |
+| v0.7.0     | Basic System Call Interface                             |
+| v0.7.1     | Ring 3 Syscall Validation                               |
+| v0.7.3     | Basic VMM Page Mapping and Boot/Build Refactoring       |
+| v0.8.5     | Bootloader refactor and E820 memory map detection       |
+| v0.8.6     | Verified E820 memory map reporting in the kernel        |
+| **v0.9.0** | **Initial PMM reimplementation and kernel integration** |
 
 Historical versions may contain kernel subsystems that are not present in the current implementation.
 
-## Development Philosophy
+---
+
+# Development Philosophy
 
 NexisK is developed from the bottom up.
 
@@ -911,10 +901,13 @@ Protected Mode
 Memory Discovery
     │
     ▼
-Interrupts
+Physical Memory Management
     │
     ▼
-Memory Management
+Virtual Memory
+    │
+    ▼
+Interrupts
     │
     ▼
 Privilege Levels
@@ -936,15 +929,18 @@ Each layer is intended to provide the foundation required by the next.
 
 This makes NexisK primarily a kernel development, learning and experimentation project.
 
-## Design Goals
+---
+
+# Design Goals
 
 The long-term goals of NexisK include:
 
 * Build a maintainable x86 kernel
 * Understand the hardware/software boundary
 * Implement core kernel subsystems from scratch
-* Provide a clean process model
+* Implement physical memory management
 * Implement virtual memory
+* Provide a clean process model
 * Implement multitasking
 * Establish a stable system-call interface
 * Support user-space execution
@@ -954,49 +950,55 @@ The long-term goals of NexisK include:
 
 The project prioritizes understanding, experimentation and incremental development over premature complexity.
 
-## Limitations
+---
+
+# Limitations
 
 NexisK is experimental and currently has several limitations.
 
-### Architecture
+## Architecture
 
 The current kernel targets 32-bit i386/x86.
 
-### Firmware
+## Firmware
 
 The current boot path is based on the traditional BIOS environment.
 
-### Memory Management
+## Memory Management
 
-The full PMM, VMM and paging implementations are currently being rebuilt after the bootloader refactor.
+The PMM is currently in its initial reimplementation stage.
 
-The current implementation provides BIOS E820 memory map detection and kernel-side reporting of the detected regions.
+It can consume the E820 memory map and identify usable physical memory regions, but complete page allocation, freeing and persistent page-state tracking are still under development.
 
-### Privilege Levels
+Virtual memory and paging are also not yet complete.
 
-The previous Ring 3 infrastructure has been temporarily removed and is planned for reimplementation.
+## Privilege Levels
 
-### Process Management
+Full Ring 3 and kernel/user privilege separation remain under development.
+
+## Process Management
 
 Process infrastructure exists in an early stage and is not yet a complete multitasking system.
 
-### Scheduling
+## Scheduling
 
 A complete scheduler has not yet been implemented.
 
-### Storage
+## Storage
 
 Filesystem and general storage support are not currently available as complete kernel subsystems.
 
-### Hardware Compatibility
+## Hardware Compatibility
 
 Real hardware testing is performed, but compatibility with all x86 hardware is not guaranteed.
 
-### Production Use
+## Production Use
 
 NexisK is not production-ready and should be considered an experimental kernel.
 
-## Contributing
+---
+
+# Contributing
 
 Contributions, experiments and technical discussions are welcome.
 
@@ -1013,7 +1015,9 @@ When contributing to NexisK:
 
 For larger architectural changes, opening an issue before implementation is recommended.
 
-## Debugging
+---
+
+# Debugging
 
 Low-level kernel development often requires debugging below the level of traditional application development.
 
@@ -1024,7 +1028,10 @@ Useful areas to inspect include:
 * Stage 2 execution
 * Kernel loading
 * E820 memory map detection
+* PMM initialization
+* Physical memory regions
 * Protected-mode initialization
+* GDT initialization
 * IDT initialization
 * Interrupt delivery
 * PIC configuration
@@ -1039,13 +1046,17 @@ When using QEMU, the `make dev` target provides additional diagnostic informatio
 
 Serial output can also be used to trace kernel execution without relying exclusively on VGA output.
 
-## License
+---
+
+# License
 
 NexisK is licensed under the GNU General Public License v2.0 only (`GPL-2.0-only`).
 
 See [LICENSE](LICENSE) for the complete license text.
 
-## Author
+---
+
+# Author
 
 Developed by `icarotelesdasilva`.
 
@@ -1053,11 +1064,13 @@ GitHub repository:
 
 https://github.com/icarotelesdasilva/NexisK
 
-## Final Note
+---
+
+# Final Note
 
 NexisK is a kernel built to explore what happens underneath an operating system.
 
-It is intentionally developed close to the hardware, from the boot process and CPU initialization to interrupts, memory discovery, memory management, processes and system calls.
+It is intentionally developed close to the hardware, from the boot process and CPU initialization to interrupts, memory discovery, physical memory management, processes and system calls.
 
 The project is still evolving, and its architecture will continue to change as new kernel subsystems are implemented.
 

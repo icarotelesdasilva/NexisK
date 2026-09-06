@@ -1,3 +1,7 @@
+build/
+pag
+*bin
+*.o
 
  # Nexis Kernel
  # Copyright (C) 2026 Ícaro Teles da Silva Ribeiro
