@@ -874,11 +874,11 @@ NexisK uses version numbers to track major development milestones.
 | v0.7.3     | Basic VMM Page Mapping and Boot/Build Refactoring       |
 | v0.8.5     | Bootloader refactor and E820 memory map detection       |
 | v0.8.6     | Verified E820 memory map reporting in the kernel        |
-| **v0.9.0** | **Initial PMM reimplementation and kernel integration** |
+
 
 Historical versions may contain kernel subsystems that are not present in the current implementation.
 
----
+
 
 # Development Philosophy
 

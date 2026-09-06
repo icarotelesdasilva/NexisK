@@ -1,6 +1,8 @@
 bits 16
 org 0x7c00
 
+boot_drive db 0
+
 
 start:
     cli
@@ -33,7 +35,6 @@ disk_error:
     cli
     hlt
 
-boot_drive db 0
 
 
 times 510 - ($ - $$) db 0
