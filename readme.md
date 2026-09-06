@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <strong>Current Release: v0.8.6</strong>
+  <strong>Current Release: v0.8.8</strong>
 </p>
 
 ---
@@ -61,28 +61,28 @@ The project is intentionally developed from the lowest levels upward.
 
 ```text
                      NexisK Kernel
-                           │
-          ┌────────────────┼────────────────┐
-          │                │                │
-          ▼                ▼                ▼
-         CPU           Interrupts        Drivers
-          │                │                │
-          └────────────────┼────────────────┘
-                           │
-                           ▼
+                          │
+          ┌───────────────┼───────────────┐
+          │               │               │
+          ▼               ▼               ▼
+         CPU          Interrupts       Drivers
+          │               │               │
+          └───────────────┼───────────────┘
+                          │
+                          ▼
                   Memory Discovery
-                           │
-                           ▼
-                    Memory Management
-                           │
-                           ▼
-                       Processes
-                           │
-                           ▼
-                    Context Switching
-                           │
-                           ▼
-                     System Calls
+                          │
+                          ▼
+                  Memory Management
+                          │
+                          ▼
+                      Processes
+                          │
+                          ▼
+                  Context Switching
+                          │
+                          ▼
+                    System Calls
 ```
 
 Some subsystems are still under active reconstruction and development.
@@ -134,20 +134,24 @@ The kernel currently provides infrastructure for:
 * BIOS E820 memory map detection
 * Kernel-side memory map reporting
 * Initial Physical Memory Manager
+* Initial PMM bitmap representation
 
 The current memory-management implementation is being rebuilt incrementally.
 
-The current PMM stage is responsible for consuming the E820 map and identifying usable physical memory regions.
+The current PMM stage consumes the E820 memory map supplied by the bootloader and identifies usable physical memory regions.
 
 The PMM currently:
 
 * Reads the E820 entry count supplied by the bootloader
 * Reads the E820 memory map
 * Identifies entries with `Type 1`
+* Calculates the number of 4 KiB pages in usable regions
 * Iterates through usable memory in 4 KiB page increments
-* Provides the initial foundation for physical page tracking
+* Calculates a bitmap index for each physical page
+* Marks the corresponding usable pages in the initial PMM bitmap representation
+* Reports detected usable memory regions through serial output
 
-Full page allocation, freeing and bitmap-based page state management are still under development.
+Full page allocation, freeing and complete reservation handling are still under development.
 
 ---
 
@@ -173,9 +177,9 @@ Stage 2
  ├── Kernel selection
  ├── E820 memory detection
  └── Kernel loading
-          │
-          ▼
-      NexisK Kernel
+       │
+       ▼
+   NexisK Kernel
 ```
 
 The bootloader currently supports:
@@ -293,15 +297,23 @@ Base: 0x00000000000F0000 | Size: 0x0000000000010000 | Type: 0x00000002
 Base: 0x0000000000100000 | Size: 0x0000000007EE0000 | Type: 0x00000001
 Base: 0x0000000007FE0000 | Size: 0x0000000000020000 | Type: 0x00000002
 Base: 0x00000000FFFC0000 | Size: 0x0000000000040000 | Type: 0x00000002
+
+Free Memory Region Found:
+Base Address: 0x0000000000000000
+Size: 0x000000000009FC00
+
+Free Memory Region Found:
+Base Address: 0x0000000000100000
+Size: 0x0000000007EE0000
 ```
 
-The kernel currently identifies usable E820 regions and reports them through serial output.
+The kernel identifies usable E820 regions and processes them in 4 KiB page increments.
 
 ---
 
 ## Physical Memory Manager
 
-NexisK now contains the initial implementation of its Physical Memory Manager.
+NexisK contains the initial implementation of its Physical Memory Manager.
 
 The PMM receives the E820 memory map and identifies usable physical memory.
 
@@ -311,7 +323,7 @@ Its current basic flow is:
 Bootloader
     │
     ▼
-BIOS E820
+ BIOS E820
     │
     ▼
 E820 Memory Map
@@ -320,25 +332,43 @@ E820 Memory Map
 NexisK Kernel
     │
     ▼
-pmm_init()
+ pmm_init()
     │
     ├── Read E820 entries
     ├── Find Type 1 regions
-    └── Iterate through 4 KiB pages
+    ├── Calculate 4 KiB pages
+    ├── Calculate physical page addresses
+    ├── Calculate bitmap indices
+    └── Mark usable pages in bitmap
 ```
 
-The current implementation is intentionally simple and is being developed incrementally.
+The current PMM implementation uses an initial byte-per-page bitmap representation.
 
-The next stages include:
+Each bitmap entry corresponds to one 4 KiB physical page.
 
+The current representation uses:
+
+```text
+0 = free
+1 = reserved / occupied
+```
+
+Usable E820 `Type 1` regions are processed and their corresponding page entries are marked as free.
+
+The current PMM stage has been validated by successfully processing the E820 map and identifying the usable physical memory regions reported by the bootloader.
+
+The following stages are still under development:
+
+* Complete bitmap initialization
 * Physical page state tracking
-* Page blocking/reservation
-* Bitmap-based page tracking
-* Physical page allocation
-* Physical page freeing
 * Kernel memory reservation
 * Bootloader memory reservation
+* Bitmap memory reservation
+* Page blocking/reservation
+* Physical page allocation
+* Physical page freeing
 * Better handling of memory-map boundaries
+* Integration with the Virtual Memory Manager
 
 ---
 
@@ -380,31 +410,32 @@ Planned functionality includes:
 
 # Architecture
 
-| Component               | Current Implementation |
-| ----------------------- | ---------------------- |
-| Project                 | NexisK Kernel          |
-| Architecture            | i386 / x86-32          |
-| CPU Mode                | Protected Mode         |
-| Kernel Language         | C                      |
-| Assembly                | NASM                   |
-| Bootloader              | Custom BIOS bootloader |
-| Boot Structure          | Stage 1 + Stage 2      |
-| Boot Menu               | Yes                    |
-| Memory Discovery        | BIOS E820              |
-| Physical Memory Manager | Initial implementation |
-| Virtual Memory Manager  | In development         |
-| Paging                  | In development         |
-| Interrupts              | IDT + PIC              |
-| Timer                   | PIT                    |
-| Display                 | VGA text mode          |
-| Debug Output            | Serial                 |
-| Input                   | Keyboard / PS/2 mouse  |
-| Syscalls                | `int 0x80`             |
-| Process Infrastructure  | Initial                |
-| Emulator                | QEMU                   |
-| Physical Testing        | Real x86 hardware      |
-| Build System            | GNU Make               |
-| License                 | GPL-2.0-only           |
+| Component               | Current Implementation               |
+| ----------------------- | ------------------------------------ |
+| Project                 | NexisK Kernel                        |
+| Architecture            | i386 / x86-32                        |
+| CPU Mode                | Protected Mode                       |
+| Kernel Language         | C                                    |
+| Assembly                | NASM                                 |
+| Bootloader              | Custom BIOS bootloader               |
+| Boot Structure          | Stage 1 + Stage 2                    |
+| Boot Menu               | Yes                                  |
+| Memory Discovery        | BIOS E820                            |
+| Physical Memory Manager | Initial implementation               |
+| PMM Bitmap              | Initial byte-per-page representation |
+| Virtual Memory Manager  | In development                       |
+| Paging                  | In development                       |
+| Interrupts              | IDT + PIC                            |
+| Timer                   | PIT                                  |
+| Display                 | VGA text mode                        |
+| Debug Output            | Serial                               |
+| Input                   | Keyboard / PS/2 mouse                |
+| Syscalls                | `int 0x80`                           |
+| Process Infrastructure  | Initial                              |
+| Emulator                | QEMU                                 |
+| Physical Testing        | Real x86 hardware                    |
+| Build System            | GNU Make                             |
+| License                 | GPL-2.0-only                         |
 
 ---
 
@@ -469,11 +500,11 @@ NexisK/
 │   │   ├── serial.asm
 │   │   ├── serial_print.c
 │   │   └── vga.c
-│   │
+│
 │   ├── gdt/
 │   │   ├── gdt.asm
 │   │   └── gdt.c
-│   │
+│
 │   ├── handlers/
 │   │   ├── handler_0x00.c
 │   │   ├── handler_0x08.c
@@ -483,32 +514,32 @@ NexisK/
 │   │   ├── keyboard_handler.c
 │   │   ├── syscall.asm
 │   │   └── syscall.c
-│   │
+│
 │   ├── idt/
 │   │   ├── idt.asm
 │   │   ├── idt.c
 │   │   └── idt.h
-│   │
+│
 │   ├── interrupts/
 │   │   ├── io.h
 │   │   ├── pic.c
 │   │   └── pic.h
-│   │
+│
 │   ├── memory/
 │   │   ├── memory_learn.h
 │   │   ├── pmm.h
 │   │   └── memory_manager/
 │   │       ├── memory.c
 │   │       └── pmm.c
-│   │
+│
 │   ├── process/
 │   │   ├── process.c
 │   │   └── process.h
-│   │
+│
 │   ├── timer/
 │   │   ├── pit.c
 │   │   └── pit.h
-│   │
+│
 │   └── kmain.c
 │
 ├── LICENSE
@@ -680,37 +711,37 @@ The current boot process is approximately:
                          BIOS
                            │
                            ▼
-                       Stage 1
+                        Stage 1
                            │
                            ▼
-                       Stage 2
+                        Stage 2
                            │
-             ┌─────────────┼─────────────┐
-             │             │             │
-             ▼             ▼             ▼
-       Initialization   Boot Menu     E820 Detection
-                                         │
-                                         ▼
-                                    E820 Memory Map
-                                         │
-                                         ▼
-                                    Kernel Loading
-                                         │
-                                         ▼
-                                    NexisK Kernel
-                                         │
-                                         ▼
-                                       kmain
-                                         │
-                         ┌───────────────┼───────────────┐
-                         │               │               │
-                         ▼               ▼               ▼
-                        GDT             IDT             PMM
-                         │               │               │
-                         └───────────────┼───────────────┘
-                                         │
-                                         ▼
-                                   Kernel Runtime
+              ┌────────────┼────────────┐
+              │            │            │
+              ▼            ▼            ▼
+        Initialization  Boot Menu   E820 Detection
+                                      │
+                                      ▼
+                                E820 Memory Map
+                                      │
+                                      ▼
+                                Kernel Loading
+                                      │
+                                      ▼
+                                  NexisK Kernel
+                                      │
+                                      ▼
+                                    kmain
+                                      │
+                         ┌────────────┼────────────┐
+                         │            │            │
+                         ▼            ▼            ▼
+                        GDT          IDT          PMM
+                         │            │            │
+                         └────────────┼────────────┘
+                                      │
+                                      ▼
+                                Kernel Runtime
 ```
 
 The bootloader is responsible for initializing the machine, detecting the available physical memory map, loading the kernel and transferring control to it.
@@ -787,13 +818,16 @@ The boot image is currently created using a 1.44 MB disk-image layout and packag
 * [x] Initial Physical Memory Manager
 * [x] Detection of usable physical memory regions
 * [x] 4 KiB page iteration
+* [x] Initial PMM bitmap representation
+* [x] Usable-page bitmap marking
+* [ ] Complete bitmap initialization
 * [ ] Physical page state tracking
 * [ ] Page blocking/reservation
-* [ ] PMM bitmap
 * [ ] Physical page allocation
 * [ ] Physical page freeing
 * [ ] Kernel memory reservation
 * [ ] Bootloader memory reservation
+* [ ] Bitmap memory reservation
 * [ ] Virtual Memory Manager
 * [ ] Paging
 * [ ] Dynamic page mapping
@@ -860,25 +894,25 @@ NexisK uses version numbers to track major development milestones.
 
 ## Current Release
 
-**v0.9.0 — Initial Physical Memory Manager**
+**v0.8.8 — Initial PMM Bitmap Integration**
 
 ## Recent Milestones
 
-| Version    | Milestone                                               |
-| ---------- | ------------------------------------------------------- |
-| v0.4.0     | Physical Memory Manager                                 |
-| v0.5.0     | Virtual Memory / Paging / PS/2                          |
-| v0.6.0     | GDT / Ring 3 / TSS                                      |
-| v0.7.0     | Basic System Call Interface                             |
-| v0.7.1     | Ring 3 Syscall Validation                               |
-| v0.7.3     | Basic VMM Page Mapping and Boot/Build Refactoring       |
-| v0.8.5     | Bootloader refactor and E820 memory map detection       |
-| v0.8.6     | Verified E820 memory map reporting in the kernel        |
-
+| Version | Milestone                                               |
+| ------- | ------------------------------------------------------- |
+| v0.4.0  | Physical Memory Manager                                 |
+| v0.5.0  | Virtual Memory / Paging / PS/2                          |
+| v0.6.0  | GDT / Ring 3 / TSS                                      |
+| v0.7.0  | Basic System Call Interface                             |
+| v0.7.1  | Ring 3 Syscall Validation                               |
+| v0.7.3  | Basic VMM Page Mapping and Boot/Build Refactoring       |
+| v0.8.5  | Bootloader refactor and E820 memory map detection       |
+| v0.8.6  | Verified E820 memory map reporting in the kernel        |
+| v0.8.8  | Initial PMM bitmap integration and usable-page tracking |
 
 Historical versions may contain kernel subsystems that are not present in the current implementation.
 
-
+---
 
 # Development Philosophy
 
@@ -968,7 +1002,9 @@ The current boot path is based on the traditional BIOS environment.
 
 The PMM is currently in its initial reimplementation stage.
 
-It can consume the E820 memory map and identify usable physical memory regions, but complete page allocation, freeing and persistent page-state tracking are still under development.
+It can consume the E820 memory map, identify usable physical memory regions, iterate through those regions in 4 KiB pages and maintain an initial bitmap representation.
+
+Complete bitmap initialization, reservation of kernel and bootloader memory, physical page allocation and freeing are still under development.
 
 Virtual memory and paging are also not yet complete.
 
@@ -1030,6 +1066,7 @@ Useful areas to inspect include:
 * E820 memory map detection
 * PMM initialization
 * Physical memory regions
+* PMM bitmap state
 * Protected-mode initialization
 * GDT initialization
 * IDT initialization
