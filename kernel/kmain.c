@@ -40,11 +40,20 @@ void kmain(void) {
 
     idt_install();
 
-    init_pit(1000);
 
-    mouse_register_interrupt();
-    ps2_mouse_init(800, 600);
-    unmask_mouse_irq();
+ /* 
+
+WARNING!!!
+
+These functions were temporarily disabled due to an operating system malfunction, so they were isolated.
+
+*/
+
+//  init_pit(1000);
+//  mouse_register_interrupt();
+// ps2_mouse_init(800, 600);
+// unmask_mouse_irq();
+
 
     vga_clear();
 
