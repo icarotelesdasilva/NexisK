@@ -1,7 +1,7 @@
 # NexisK
 
 <p align="center">
-  <strong>An experimental x86 kernel built from scratch.</strong>
+  <strong>An x86 kernel built from scratch.</strong>
 </p>
 
 <p align="center">
