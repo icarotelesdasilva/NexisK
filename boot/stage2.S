@@ -100,6 +100,7 @@ stage2:
 
 
 memory_request:
+    mov word[e820_count - stage2], 0
     mov ax, 0x5000
     mov es, ax
     mov word [es:0x7000], 0
@@ -161,7 +162,7 @@ protected_mode:
 
     mov esp, 0x00090000
     
-    movzx eax, word [e820_count - stage2]
+    movzx eax, word [e820_count]
     push eax
     call kmain
 
@@ -173,6 +174,10 @@ halt:
 
 
 align 4
+
+in al, 0x92
+or al, 2
+out 0x92, al
 
 gdt_start:
 
