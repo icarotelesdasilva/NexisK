@@ -1,3 +1,12 @@
+;
+; NexisLoader
+; Handcrafted x86 Kernel Bootloader
+;
+; Independent project within the Nexis ecosystem
+;
+; Copyright (c) 2026 icarotelesdasilva
+; Licensed under the MIT License
+
 bits 16
 
 global stage2
@@ -93,6 +102,7 @@ stage2:
 memory_request:
     mov ax, 0x5000
     mov es, ax
+    mov word [es:0x7000], 0
     xor di, di
 
     xor ebx, ebx
