@@ -19,7 +19,7 @@
 
 # Overview
 
-NexisK is an experimental operating system kernel developed from scratch for the i386 architecture.
+NexisK is an kernel developed from scratch for the i386 architecture.
 
 The project focuses on low-level systems programming, x86 architecture, hardware interaction, interrupt handling, memory management, process infrastructure, kernel initialization and bootloader development.
 
