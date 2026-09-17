@@ -385,43 +385,6 @@ Planned functionality includes:
 * Process isolation
 * Userspace process execution
 
-# Userspace Structure
-
-NexisK now includes the initial directory structure for userspace development.
-
-Current structure:
-
-```text
-userspace/
-├── init/
-└── shell/
-```
-
-The `userspace/init` directory is reserved for the future initial userspace process.
-
-The `userspace/shell` directory is reserved for the future userspace command-line shell.
-
-These directories establish the architectural separation between kernel-side functionality and future userspace programs.
-
-The presence of these directories does not mean that full Ring 3 execution or a complete userspace environment has been implemented.
-
-The intended long-term structure is:
-
-```text
-Kernel
- │
- ├── Process Management
- ├── Memory Management
- ├── System Calls
- └── Hardware Interfaces
-          │
-          ▼
-      Userspace
-          │
-          ├── init
-          └── shell
-```
-
 # Architecture
 
 | Component               | Current Implementation               |
@@ -461,7 +424,6 @@ CPU
  │
  ├── GDT
  ├── Protected Mode
- └── Privilege Infrastructure
       │
       ▼
 Interrupts
@@ -476,21 +438,10 @@ Memory
  │
  ├── E820
  ├── PMM
- ├── VMM
  └── Paging
       │
       ▼
-Processes
- │
- ├── Address Spaces
- ├── Context Switching
- └── Scheduler
-      │
-      ▼
 System Calls
-      │
-      ▼
-User Space
 ```
 
 The architecture is expected to change as the project evolves.
@@ -552,10 +503,6 @@ NexisK/
 │   │   └── pit.h
 │   │
 │   └── kmain.c
-│
-├── userspace/
-│   ├── init/
-│   └── shell/
 │
 ├── LICENSE
 ├── linker.ld
@@ -628,12 +575,13 @@ Clone the repository:
 ```bash
 git clone https://github.com/icarotelesdasilva/NexisK.git
 cd NexisK
+gcc read.c -o read.o
 ```
 
 Build the kernel and bootable ISO:
 
 ```bash
-make
+./read.o
 ```
 
 Generated files are placed inside:
