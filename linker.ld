@@ -28,10 +28,4 @@ SECTIONS
 
     _fim_do_kernel = .;
 
-    /DISCARD/ :
-    {
-        *(.eh_frame)
-        *(.comment)
-        *(.note*)
-    }
 }

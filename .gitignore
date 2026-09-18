@@ -2,7 +2,7 @@ build/
 pag
 *bin
 *.o
-
+ qemu_errors.log
  # Nexis Kernel
  # Copyright (C) 2026 Ícaro Teles da Silva Ribeiro
  # Author: @icarotelesdasilva

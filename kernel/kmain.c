@@ -34,9 +34,14 @@ extern void ps2_mouse_init(int screen_width, int screen_height);
 extern void unmask_mouse_irq(void);
 
 void kmain(void) {
-    init_gdt();
 
-    pic_remap(0x20, 0x28);
+
+//    init_gdt();
+
+  pic_remap(0x20, 0x28);
+
+
+
 
     idt_install();
 
@@ -66,5 +71,5 @@ These functions were temporarily disabled due to an operating system malfunction
     vga_print("Kernel alive.");
 
     for (;;)
-        asm volatile ("hlt");
+        asm volatile ("sti");
 }

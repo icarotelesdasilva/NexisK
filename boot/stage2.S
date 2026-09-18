@@ -7,6 +7,19 @@
 ; Copyright (c) 2026 icarotelesdasilva
 ; Licensed under the MIT License
 
+
+
+;
+; NexisLoader
+; Handcrafted x86 Kernel Bootloader
+;
+; Independent project within the Nexis ecosystem
+;
+; Copyright (c) 2026 icarotelesdasilva
+; Licensed under the MIT License
+
+
+
 bits 16
 
 global stage2
@@ -164,7 +177,8 @@ protected_mode:
     
     movzx eax, word [e820_count]
     push eax
-    call kmain
+    
+   call kmain
 
 
 halt:
@@ -175,9 +189,6 @@ halt:
 
 align 4
 
-in al, 0x92
-or al, 2
-out 0x92, al
 
 gdt_start:
 
