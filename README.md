@@ -1,6 +1,4 @@
-<p align="center">
-  <img src="media/IMG_3903 (2).PNG" alt="Logo" width="200">
-</p>
+![NexisK](media/NexisK.PNG)
 
 
 # NexisK
