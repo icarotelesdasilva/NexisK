@@ -42,20 +42,3 @@ The **userspace layer is currently experimental** and is being developed as part
 
 NexisK targets the **i386 / x86 32-bit architecture**.
 
-The architecture is intentionally organized into separate subsystems:
-
-
-
-
-kernel/
-├── drivers/
-├── GDT/
-├── IDT/
-├── inlines/
-├── interrupts/
-├── memory/
-├── syscall/
-├── TLB/
-├── TSS/
-└── VMM/
-
